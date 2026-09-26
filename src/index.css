@@ -806,6 +806,33 @@ button.field.partner-name {
 
 .card-name-field input { text-transform: none; letter-spacing: normal; font-weight: 500; font-size: 15px; }
 
+.suggest {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid #c6a15b;
+  border-radius: 8px;
+  background: #102118;
+}
+
+.suggest button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.suggest-name { font-size: 15px; color: #f6f1e6; }
+
 .choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .choice-row button {

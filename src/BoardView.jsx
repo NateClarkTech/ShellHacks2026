@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { sameCard } from "./vision.js";
@@ -35,6 +35,71 @@ function rowMeta(card, seatNames) {
   return `${kind} · ${who} · ${ZONE_LABEL[card.zone]}`;
 }
 
+function NameField({ label, value, onChange, placeholder, ariaLabel }) {
+  const [open, setOpen] = useState(false);
+  const [options, setOptions] = useState([]);
+  const request = useRef(0);
+
+  useEffect(() => {
+    const query = value.trim();
+    if (query.length < 2) return undefined;
+    const id = request.current + 1;
+    request.current = id;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return;
+        const body = await response.json();
+        if (request.current === id) setOptions(Array.isArray(body.suggestions) ? body.suggestions : []);
+      } catch {
+        if (request.current === id) setOptions([]);
+      }
+    }, 160);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  function choose(option) {
+    onChange({ name: option.name, detail: option.detail || "" });
+    setOpen(false);
+  }
+
+  return (
+    <div className="card-name-field">
+      {label && <span>{label}</span>}
+      <input
+        aria-label={ariaLabel || label || "Card name"}
+        placeholder={placeholder}
+        value={value}
+        maxLength={80}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onChange={(event) => {
+          onChange({ name: event.target.value, detail: "" });
+          setOpen(true);
+        }}
+      />
+      {open && value.trim().length >= 2 && options.length > 0 && (
+        <div className="suggest" role="listbox">
+          {options.map((option) => (
+            <button
+              key={`${option.name}|${option.detail}`}
+              type="button"
+              role="option"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
+            >
+              <span className="suggest-name">{option.name}</span>
+              {option.detail && <span className="card-meta">{option.detail}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
   const same =
     draft.name === card.name &&
@@ -54,12 +119,13 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
           : "Accept change";
   const resolving = card.zone === "stack" && draft.zone !== "stack";
 
-  function pickName(name) {
+  function pickName(name, detail = "") {
     setDraft((current) => {
       const commander = commanders[current.controller];
       const zone =
         current.zone === "library" && commander && sameCard(name, commander) ? "command" : current.zone;
-      return { ...current, name, zone };
+      const kept = detail || (sameCard(name, current.name) ? current.detail : "");
+      return { ...current, name, detail: kept || "", zone };
     });
   }
 
@@ -68,16 +134,16 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
       {typeof card.image === "string" && card.image.startsWith("data:image/") && (
         <img className="card-crop" src={card.image} alt={card.name ? `${card.name} from the photo` : "Card from the photo"} />
       )}
-      <label className="card-name-field">
-        Name
-        <input
-          aria-label="Card name"
-          value={draft.name ?? ""}
-          maxLength={80}
-          onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-        />
-      </label>
-      <p>{card.note}</p>
+      <NameField
+        label="Name"
+        ariaLabel="Card name"
+        value={draft.name ?? ""}
+        onChange={({ name, detail }) => pickName(name, detail)}
+      />
+      {card.note && !(draft.name && (
+        card.note === "The read was uncertain. Pick the card."
+        || card.note === "The two readers disagree. Pick the card."
+      )) && <p>{card.note}</p>}
       <p>{card.reason}</p>
       {sourceLabel(card.sources) && <p className="card-src">{sourceLabel(card.sources)}</p>}
       {resolving && (
@@ -145,6 +211,7 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
               type: "apply",
               id: card.id,
               name: draft.name,
+              detail: draft.detail ?? "",
               controller: draft.controller,
               zone: draft.zone,
             })
@@ -270,6 +337,7 @@ function CardRow({ card, seatNames, selected, onOpen, children }) {
         onClick={onOpen}
       >
         <span className="card-name">{card.name || "Unidentified"}</span>
+        {card.detail && <span className="card-meta">{card.detail}</span>}
         <span className="card-meta">{rowMeta(card, seatNames)}</span>
       </button>
       {selected && children}
@@ -293,11 +361,23 @@ export function BoardView({
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [adding, setAdding] = useState("");
+  const [addingDetail, setAddingDetail] = useState("");
   const [addSeat, setAddSeat] = useState(SEATS[0]);
 
   function open(card, nextDraft) {
+    if (!nextDraft && card.id === selectedId) {
+      setSelectedId(null);
+      setDraft(null);
+      return;
+    }
     setSelectedId(card.id);
-    setDraft(nextDraft ?? { name: card.name, controller: card.controller, zone: card.zone });
+    setDraft({
+      name: card.name,
+      controller: card.controller,
+      zone: card.zone,
+      detail: card.detail ?? "",
+      ...nextDraft,
+    });
   }
 
   const pending = board.cards.filter(
@@ -432,16 +512,19 @@ export function BoardView({
               event.preventDefault();
               const name = adding.trim();
               if (!name) return;
-              send({ type: "add", name, controller: addSeat, zone: "battlefield" });
+              send({ type: "add", name, detail: addingDetail, controller: addSeat, zone: "battlefield" });
               setAdding("");
+              setAddingDetail("");
             }}
           >
-            <input
-              aria-label="Add a card by name"
+            <NameField
+              ariaLabel="Add a card by name"
               placeholder="Add a card by name"
               value={adding}
-              maxLength={80}
-              onChange={(event) => setAdding(event.target.value)}
+              onChange={({ name, detail }) => {
+                setAdding(name);
+                setAddingDetail(detail);
+              }}
             />
             <div className="choice-row">
               {SEATS.map((seat) => (

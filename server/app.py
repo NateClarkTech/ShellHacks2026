@@ -1,10 +1,11 @@
 import json
 import os
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.vision.scan import CACHE, run_scan
+from server.vision.suggest import suggest_names
 
 app = FastAPI(title="Commander table")
 app.add_middleware(
@@ -30,6 +31,11 @@ def health():
         "azure": bool(os.environ.get("AZURE_VISION_KEY") and os.environ.get("AZURE_VISION_ENDPOINT")),
         "names": names,
     }
+
+
+@app.get("/api/suggest")
+async def suggest(q: str = Query("")):
+    return {"suggestions": await suggest_names(q)}
 
 
 SEATS = {"seat1", "seat2", "seat3", "seat4"}
