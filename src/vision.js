@@ -206,6 +206,8 @@ export function vote(cardsight = [], ocr = []) {
       ),
       box: detection.box ?? null,
       image: detection.image || null,
+      tapped: Boolean(detection.tapped),
+      stacked: Boolean(detection.stacked),
       used: false,
     });
   }
@@ -220,6 +222,8 @@ export function vote(cardsight = [], ocr = []) {
         alternatives: [],
         box: line.box ?? null,
         image: line.image || null,
+        tapped: Boolean(line.tapped),
+        stacked: Boolean(line.stacked),
         sight: null,
         blankNote: line.note || "The title could not be read.",
       });
@@ -231,6 +235,8 @@ export function vote(cardsight = [], ocr = []) {
       alternatives: asAlternatives(line.alternatives, "ocr", asConfidence(line.confidence)),
       box: line.box ?? null,
       image: line.image || null,
+      tapped: Boolean(line.tapped),
+      stacked: Boolean(line.stacked),
       sight: null,
       blankNote: null,
     });
@@ -259,20 +265,25 @@ export function vote(cardsight = [], ocr = []) {
   const result = [];
   for (const slot of slots) {
     const image = slot.image || slot.sight?.image || null;
+    const pose = {
+      tapped: Boolean(slot.tapped || slot.sight?.tapped),
+      stacked: Boolean(slot.stacked || slot.sight?.stacked),
+    };
     if (!slot.sight) {
       if (slot.blankNote) {
-        result.push(finish(null, "choose", 0, ["ocr"], [], slot.box, slot.blankNote, image));
+        result.push({ ...finish(null, "choose", 0, ["ocr"], [], slot.box, slot.blankNote, image), ...pose });
         continue;
       }
-      result.push(
-        singleSource(slot.ocrName, slot.ocrConfidence, ["ocr"], slot.alternatives, slot.box, image),
-      );
+      result.push({
+        ...singleSource(slot.ocrName, slot.ocrConfidence, ["ocr"], slot.alternatives, slot.box, image),
+        ...pose,
+      });
       continue;
     }
     if (sameCard(slot.ocrName, slot.sight.name)) {
       const confidence = Math.max(slot.ocrConfidence, slot.sight.confidence);
       const name = slot.sight.confidence > slot.ocrConfidence ? slot.sight.name : slot.ocrName;
-      result.push(finish(name, "agreed", confidence, ["ocr", "cardsight"], [], slot.box, undefined, image));
+      result.push({ ...finish(name, "agreed", confidence, ["ocr", "cardsight"], [], slot.box, undefined, image), ...pose });
       continue;
     }
     const bucket = [];
@@ -289,16 +300,19 @@ export function vote(cardsight = [], ocr = []) {
     for (const alt of slot.alternatives) mergeCandidate(bucket, alt);
     for (const alt of slot.sight.suggestions) mergeCandidate(bucket, alt);
     const candidates = sortedCandidates(bucket);
-    result.push(
-      finish(null, "choose", candidates[0]?.confidence ?? 0, ["ocr", "cardsight"], candidates, slot.box, undefined, image),
-    );
+    result.push({
+      ...finish(null, "choose", candidates[0]?.confidence ?? 0, ["ocr", "cardsight"], candidates, slot.box, undefined, image),
+      ...pose,
+    });
   }
 
   for (const sight of sights) {
     if (sight.used) continue;
-    result.push(
-      singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, sight.box, sight.image),
-    );
+    result.push({
+      ...singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, sight.box, sight.image),
+      tapped: Boolean(sight.tapped),
+      stacked: Boolean(sight.stacked),
+    });
   }
   return result;
 }
@@ -441,6 +455,8 @@ export function assembleScan(
       note,
       photoId: photoId ?? null,
       image: slot.image || null,
+      tapped: Boolean(slot.tapped),
+      stacked: Boolean(slot.stacked),
     };
     if (pinned) {
       return {

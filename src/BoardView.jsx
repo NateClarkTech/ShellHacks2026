@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
+import { scanTimeLabel, secondsLeft } from "./scanProgress.js";
 import { sameCard } from "./vision.js";
 
 const ZONE_ORDER = ["command", "battlefield", "graveyard", "exile", "library", "hand"];
@@ -32,7 +33,8 @@ function rowMeta(card, seatNames) {
           : card.placement === "accepted"
             ? "Accepted"
             : "Guess";
-  return `${kind} · ${who} · ${ZONE_LABEL[card.zone]}`;
+  const pose = [card.tapped ? "Tapped" : "", card.stacked ? "Stacked" : ""].filter(Boolean);
+  return [kind, who, ZONE_LABEL[card.zone], ...pose].join(" · ");
 }
 
 function NameField({ label, value, onChange, placeholder, ariaLabel }) {
@@ -104,7 +106,8 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
   const same =
     draft.name === card.name &&
     draft.controller === card.controller &&
-    draft.zone === card.zone;
+    draft.zone === card.zone &&
+    Boolean(draft.tapped) === Boolean(card.tapped);
   const needsConfirm = card.identity === "confirm";
   const acceptedAsIs =
     card.placement === "accepted" && !needsConfirm && card.identity !== "choose" && same;
@@ -168,6 +171,15 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
         </div>
       )}
       <div className="choice-row">
+        <button
+          type="button"
+          className={draft.tapped ? "on" : ""}
+          onClick={() => setDraft((current) => ({ ...current, tapped: !current.tapped }))}
+        >
+          {draft.tapped ? "Tapped" : "Untapped"}
+        </button>
+      </div>
+      <div className="choice-row">
         {SEATS.map((seat) => (
           <button
             key={seat}
@@ -212,6 +224,7 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
               id: card.id,
               name: draft.name,
               detail: draft.detail ?? "",
+              tapped: Boolean(draft.tapped),
               controller: draft.controller,
               zone: draft.zone,
             })
@@ -223,6 +236,37 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
           Remove
         </button>
       </div>
+    </div>
+  );
+}
+
+function ScanMeter({ progress }) {
+  const [now, setNow] = useState(() => performance.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(performance.now()), 100);
+    return () => clearInterval(id);
+  }, []);
+  const left = secondsLeft(progress, now);
+  const budget = progress?.budget;
+  const indeterminate = left == null;
+  let pct = 0;
+  if (!indeterminate) {
+    pct = budget > 0 ? Math.max(0, Math.min(100, ((budget - left) / budget) * 100)) : 100;
+  }
+  const label = scanTimeLabel(left);
+  return (
+    <div className="scan-meter">
+      <div
+        className={indeterminate ? "scan-meter-track wait" : "scan-meter-track"}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={indeterminate ? undefined : Math.round(pct)}
+        aria-label="Scan progress"
+      >
+        <div className="scan-meter-fill" style={indeterminate ? undefined : { width: `${pct}%` }} />
+      </div>
+      <p className="scan-meter-time">{label}</p>
     </div>
   );
 }
@@ -282,6 +326,7 @@ function ScanWizard({ scan, seatNames }) {
           <p className="scan-note">
             {scan.note || `${who} · ${where}. Hold the phone a hand-span up, so the titles are readable.`}
           </p>
+          {scan.busy && <ScanMeter progress={scan.progress} />}
           {scan.pending ? (
             <div className="scan-actions">
               <button type="button" disabled={scan.busy} onClick={scan.onReplace}>
@@ -376,6 +421,7 @@ export function BoardView({
       controller: card.controller,
       zone: card.zone,
       detail: card.detail ?? "",
+      tapped: Boolean(card.tapped),
       ...nextDraft,
     });
   }
@@ -457,7 +503,7 @@ export function BoardView({
               names stay on that player. A disagreement asks you to pick. Or load the staged board.
             </p>
           )}
-          {scanning && <p className="board-empty">Reading the table…</p>}
+          {scanning && !scan?.step && <ScanMeter progress={scan?.progress} />}
           {board.cards.length > 0 && (
             <p className="board-limit">
               Face-down libraries, cards under other cards, which aura is on which creature, and

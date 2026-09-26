@@ -1,13 +1,41 @@
+import asyncio
 import io
+import time
 
 from PIL import Image
 
-from server.vision.cardsight import parse_cardsight
+from server.vision.cardsight import SightLimiter, parse_cardsight, sight_seconds
 from server.vision.images import prepare_image
 from server.vision.names import NameIndex
 from server.vision.ocr import lines_to_observations, parse_read_result
 
 NAMES = ["Swords to Plowshares", "Sol Ring", "Island", "Sword of Fire and Ice"]
+
+
+def test_cardsight_time_is_one_and_a_quarter_seconds_per_four_cards():
+    assert sight_seconds(0) == 0
+    assert sight_seconds(1) == 1.25
+    assert sight_seconds(4) == 1.25
+    assert sight_seconds(5) == 2.5
+    assert sight_seconds(8) == 2.5
+
+
+def test_four_cardsight_calls_fit_in_a_window_and_the_fifth_waits():
+    limiter = SightLimiter(batch=4, window=0.25)
+
+    async def burst():
+        starts = []
+
+        async def one():
+            await limiter.acquire()
+            starts.append(time.monotonic())
+
+        await asyncio.gather(*(one() for _ in range(5)))
+        return starts
+
+    starts = asyncio.run(burst())
+    assert max(starts[:4]) - min(starts[:4]) < 0.12
+    assert starts[4] - starts[0] >= 0.22
 
 
 def test_cardsight_parse_keeps_names_and_drops_a_set_only_match():
