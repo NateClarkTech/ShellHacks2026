@@ -52,6 +52,8 @@ def test_a_close_photo_is_one_read_and_the_same_bytes_replay(monkeypatch):
     second = asyncio.run(scan_seat(payload, "north", "graveyard", "close", "add"))
     assert first["scene"] == "close"
     assert first["photoId"]
+    assert first["ocr"]
+    assert all(row["image"].startswith("data:image/jpeg;base64,") for row in first["ocr"])
     assert len(reads) == 1
     assert second["replayed"] is True
     assert second["photoId"] == first["photoId"]

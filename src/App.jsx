@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BoardView } from "./BoardView.jsx";
 import { Seat } from "./Seat.jsx";
-import { ZONE_LABEL, appendScan, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
+import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
 import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
 import { assembleScan, duplicateShare } from "./vision.js";
 
@@ -239,13 +239,13 @@ export default function App() {
           onReset={() => setResetAsk(seat)}
         />
       ))}
-      {!boardOpen && !resetAsk && (
+      {!boardOpen && !resetAsk && !choosing && (
         <button type="button" className="board-launch" onClick={() => setBoardOpen(true)}>
           Board
         </button>
       )}
       {boardOpen && (
-        <div className="scrim">
+        <div className="scrim board-scrim">
           <BoardView
             key={viewKey}
             board={board}
@@ -293,7 +293,7 @@ export default function App() {
             role="dialog"
             aria-label="Reset the game"
           >
-            <p>Are you sure you want to reset the game?</p>
+            <p>This clears the life totals and the board.</p>
             <div className="confirm-actions">
               <button type="button" onClick={() => setResetAsk(null)}>
                 Cancel
@@ -304,6 +304,8 @@ export default function App() {
                 onClick={() => {
                   setResetAsk(null);
                   send({ type: "reset" });
+                  setBoard(emptyBoard());
+                  doneScan();
                 }}
               >
                 Reset

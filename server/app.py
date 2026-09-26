@@ -32,7 +32,7 @@ def health():
     }
 
 
-SEATS = {"south", "north", "east", "west"}
+SEATS = {"seat1", "seat2", "seat3", "seat4"}
 SCAN_ZONES = {"battlefield", "graveyard", "exile", "command"}
 
 

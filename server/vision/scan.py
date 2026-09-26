@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import os
 import time
@@ -161,13 +162,28 @@ def _jpeg(image: np.ndarray) -> bytes:
     return encoded.tobytes()
 
 
-def _blank(crop: dict, note: str) -> dict:
+def _crop_image(crop: dict, pick: tuple[str, dict] | None) -> str:
+    """The upright warp, small enough to keep beside the card name."""
+    end = pick[0] if pick else "top"
+    view = orient_warp(crop["warp"], end)
+    height, width = view.shape[:2]
+    if width > 180:
+        scale = 180 / width
+        view = cv2.resize(view, (180, max(1, round(height * scale))), interpolation=cv2.INTER_AREA)
+    ok, encoded = cv2.imencode(".jpg", view, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+    if not ok:
+        return ""
+    return "data:image/jpeg;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
+
+
+def _blank(crop: dict, note: str, image: str) -> dict:
     return {
         "name": None,
         "confidence": 0,
         "alternatives": [],
         "box": crop["box"],
         "note": note,
+        "image": image,
     }
 
 
@@ -240,13 +256,14 @@ async def scan_seat(
                     index,
                 )
 
+    views = [_crop_image(crop, chosen.get(index)) for index, crop in enumerate(crops)]
     ocr = []
     sight_indexes = []
     for index, _crop in enumerate(crops):
         pick = chosen.get(index)
         observation = pick[1] if pick else None
         if observation is not None:
-            ocr.append(observation)
+            ocr.append({**observation, "image": views[index]})
             # An exact basic or token is 1.0, so it never spends a CardSight call.
             if observation["confidence"] >= GUESS_AT:
                 continue
@@ -266,13 +283,13 @@ async def scan_seat(
             warnings.append(warning)
             seen_warning.add(warning)
         if detection is not None:
-            cardsight.append(detection)
+            cardsight.append({**detection, "image": views[index]})
             covered.add(index)
     for index, crop in enumerate(crops):
         if chosen.get(index) or index in covered:
             continue
         note = "Glare. Retake this photo." if crop["glare"] else "The title could not be read."
-        ocr.append(_blank(crop, note))
+        ocr.append(_blank(crop, note, views[index]))
 
     result = _seat_result(warnings, ocr=ocr, cardsight=cardsight, scene="close", photo_id=photo_id)
     result["glare"] = sum(1 for crop in crops if crop["glare"])

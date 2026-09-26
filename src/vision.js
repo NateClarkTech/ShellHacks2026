@@ -122,7 +122,7 @@ function readNote(identity, confidence, sources) {
   return "Only one reader saw this. Check the name.";
 }
 
-function finish(name, identity, confidence, sources, candidates, box, note) {
+function finish(name, identity, confidence, sources, candidates, box, note, image) {
   const uniqueSources = [...new Set(sources)];
   return {
     name,
@@ -132,6 +132,7 @@ function finish(name, identity, confidence, sources, candidates, box, note) {
     candidates,
     box: box ?? null,
     note: note || readNote(identity, confidence, uniqueSources),
+    image: image || null,
   };
 }
 
@@ -169,7 +170,7 @@ function mutualDisagree(slot, sight) {
   return ocrNamesSight && sightNamesOcr && !sameCard(slot.ocrName, sight.name);
 }
 
-function singleSource(name, confidence, sources, alternatives, box) {
+function singleSource(name, confidence, sources, alternatives, box, image) {
   const bucket = [];
   mergeCandidate(bucket, { name, confidence, sources });
   for (const alt of alternatives) {
@@ -184,9 +185,11 @@ function singleSource(name, confidence, sources, alternatives, box) {
       sources,
       candidates.filter((item) => !sameCard(item.name, name)),
       box,
+      undefined,
+      image,
     );
   }
-  return finish(null, "choose", candidates[0]?.confidence ?? confidence, sources, candidates, box);
+  return finish(null, "choose", candidates[0]?.confidence ?? confidence, sources, candidates, box, undefined, image);
 }
 
 export function vote(cardsight = [], ocr = []) {
@@ -202,6 +205,7 @@ export function vote(cardsight = [], ocr = []) {
         asConfidence(detection.confidence),
       ),
       box: detection.box ?? null,
+      image: detection.image || null,
       used: false,
     });
   }
@@ -215,6 +219,7 @@ export function vote(cardsight = [], ocr = []) {
         ocrConfidence: 0,
         alternatives: [],
         box: line.box ?? null,
+        image: line.image || null,
         sight: null,
         blankNote: line.note || "The title could not be read.",
       });
@@ -225,6 +230,7 @@ export function vote(cardsight = [], ocr = []) {
       ocrConfidence: asConfidence(line.confidence),
       alternatives: asAlternatives(line.alternatives, "ocr", asConfidence(line.confidence)),
       box: line.box ?? null,
+      image: line.image || null,
       sight: null,
       blankNote: null,
     });
@@ -252,20 +258,21 @@ export function vote(cardsight = [], ocr = []) {
 
   const result = [];
   for (const slot of slots) {
+    const image = slot.image || slot.sight?.image || null;
     if (!slot.sight) {
       if (slot.blankNote) {
-        result.push(finish(null, "choose", 0, ["ocr"], [], slot.box, slot.blankNote));
+        result.push(finish(null, "choose", 0, ["ocr"], [], slot.box, slot.blankNote, image));
         continue;
       }
       result.push(
-        singleSource(slot.ocrName, slot.ocrConfidence, ["ocr"], slot.alternatives, slot.box),
+        singleSource(slot.ocrName, slot.ocrConfidence, ["ocr"], slot.alternatives, slot.box, image),
       );
       continue;
     }
     if (sameCard(slot.ocrName, slot.sight.name)) {
       const confidence = Math.max(slot.ocrConfidence, slot.sight.confidence);
       const name = slot.sight.confidence > slot.ocrConfidence ? slot.sight.name : slot.ocrName;
-      result.push(finish(name, "agreed", confidence, ["ocr", "cardsight"], [], slot.box));
+      result.push(finish(name, "agreed", confidence, ["ocr", "cardsight"], [], slot.box, undefined, image));
       continue;
     }
     const bucket = [];
@@ -283,13 +290,15 @@ export function vote(cardsight = [], ocr = []) {
     for (const alt of slot.sight.suggestions) mergeCandidate(bucket, alt);
     const candidates = sortedCandidates(bucket);
     result.push(
-      finish(null, "choose", candidates[0]?.confidence ?? 0, ["ocr", "cardsight"], candidates, slot.box),
+      finish(null, "choose", candidates[0]?.confidence ?? 0, ["ocr", "cardsight"], candidates, slot.box, undefined, image),
     );
   }
 
   for (const sight of sights) {
     if (sight.used) continue;
-    result.push(singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, sight.box));
+    result.push(
+      singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, sight.box, sight.image),
+    );
   }
   return result;
 }
@@ -431,6 +440,7 @@ export function assembleScan(
       placement: "guess",
       note,
       photoId: photoId ?? null,
+      image: slot.image || null,
     };
     if (pinned) {
       return {

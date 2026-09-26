@@ -65,6 +65,18 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
 
   return (
     <div className="card-edit">
+      {typeof card.image === "string" && card.image.startsWith("data:image/") && (
+        <img className="card-crop" src={card.image} alt={card.name ? `${card.name} from the photo` : "Card from the photo"} />
+      )}
+      <label className="card-name-field">
+        Name
+        <input
+          aria-label="Card name"
+          value={draft.name ?? ""}
+          maxLength={80}
+          onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+        />
+      </label>
       <p>{card.note}</p>
       <p>{card.reason}</p>
       {sourceLabel(card.sources) && <p className="card-src">{sourceLabel(card.sources)}</p>}

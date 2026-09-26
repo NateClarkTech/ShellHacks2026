@@ -154,10 +154,12 @@ test("a cardsight-only crop keeps the quad, and an unread crop asks for a name",
   );
   assert.equal(seen.name, "Sol Ring");
   assert.equal(seen.box.cx, 0.2);
-  const [missed] = vote([], [{ name: null, box: { cx: 0.4, cy: 0.4 }, note: "Glare. Retake this photo." }]);
+  const [missed] = vote([], [{ name: null, box: { cx: 0.4, cy: 0.4 }, note: "Glare. Retake this photo.", image: "data:image/jpeg;base64,abc" }]);
   assert.equal(missed.name, null);
   assert.equal(missed.identity, "choose");
   assert.match(missed.note, /Glare/);
+  assert.equal(missed.image, "data:image/jpeg;base64,abc");
+  assert.equal(seen.image, null);
 });
 
 test("a seat scan pins the seat and zone, and a token still asks", () => {

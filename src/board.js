@@ -17,7 +17,7 @@ export const ZONE_LABEL = {
 };
 
 export function emptyBoard() {
-  return { cards: [], past: [], orientation: 0, warnings: [] };
+  return { cards: [], past: [], orientation: 0, warnings: [], images: {} };
 }
 
 export function boardFromScan(payload, options = {}) {
@@ -31,10 +31,13 @@ export function boardFromScan(payload, options = {}) {
 
 export function replaceWithScan(state, payload, options = {}) {
   const next = boardFromScan(payload, options);
-  if (state.cards.length === 0 && state.orientation === 0 && state.past.length === 0) return next;
+  const images = rememberImages(next.cards);
+  if (state.cards.length === 0 && state.orientation === 0 && state.past.length === 0) {
+    return { ...next, images };
+  }
   const past = [...state.past, snapshot(state)];
   if (past.length > HISTORY_LIMIT) past.shift();
-  return { ...next, past };
+  return { ...next, past, images };
 }
 
 export function lastPhotoId(state, controller, zone) {
@@ -69,16 +72,24 @@ export function appendScan(state, payload, options = {}) {
   const warnings = Array.isArray(payload?.warnings)
     ? payload.warnings.filter((item) => typeof item === "string")
     : (state.warnings ?? []);
+  const cards = restack([...kept, ...added]);
   return withHistory(state, {
-    cards: restack([...kept, ...added]),
+    cards,
     orientation: state.orientation,
     warnings,
+    images: rememberImages(added, state.images),
   });
+}
+
+function withoutImage(card) {
+  if (!card?.image) return card;
+  const { image: _image, ...rest } = card;
+  return rest;
 }
 
 function snapshot(state) {
   return structuredClone({
-    cards: state.cards,
+    cards: state.cards.map(withoutImage),
     orientation: state.orientation,
     warnings: state.warnings ?? [],
   });
@@ -87,7 +98,24 @@ function snapshot(state) {
 function withHistory(state, next) {
   const past = [...state.past, snapshot(state)];
   if (past.length > HISTORY_LIMIT) past.shift();
-  return { ...next, past, warnings: next.warnings ?? state.warnings ?? [] };
+  return {
+    ...next,
+    past,
+    images: next.images ?? state.images ?? {},
+    warnings: next.warnings ?? state.warnings ?? [],
+  };
+}
+
+function rememberImages(cards, images = {}) {
+  const next = { ...images };
+  for (const card of cards) {
+    if (card.image) next[card.id] = card.image;
+  }
+  return next;
+}
+
+function attachImages(cards, images = {}) {
+  return cards.map((card) => (card.image || !images[card.id] ? card : { ...card, image: images[card.id] }));
 }
 
 function restack(cards) {
@@ -209,7 +237,12 @@ export function reduceBoard(state, action) {
     case "undo": {
       if (state.past.length === 0) return state;
       const prev = state.past[state.past.length - 1];
-      return { ...prev, past: state.past.slice(0, -1) };
+      return {
+        ...prev,
+        cards: attachImages(prev.cards, state.images),
+        images: state.images ?? {},
+        past: state.past.slice(0, -1),
+      };
     }
     case "clear":
       return state.cards.length === 0 && state.orientation === 0
@@ -244,13 +277,18 @@ export function loadBoard() {
     if (!raw) return emptyBoard();
     const parsed = migrateBoard(JSON.parse(raw));
     if (!Array.isArray(parsed?.cards) || !parsed.cards.every(cardOk)) return emptyBoard();
+    const images =
+      parsed.images && typeof parsed.images === "object" && !Array.isArray(parsed.images)
+        ? parsed.images
+        : {};
     return {
-      cards: parsed.cards,
+      cards: attachImages(parsed.cards, images),
       orientation: [0, 1, 2, 3].includes(parsed.orientation) ? parsed.orientation : 0,
       warnings: Array.isArray(parsed.warnings)
         ? parsed.warnings.filter((item) => typeof item === "string")
         : [],
       past: Array.isArray(parsed.past) ? parsed.past.slice(-HISTORY_LIMIT) : [],
+      images,
     };
   } catch {
     return emptyBoard();
@@ -258,5 +296,14 @@ export function loadBoard() {
 }
 
 export function saveBoard(board) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(board));
+  const images = rememberImages(board.cards ?? [], board.images);
+  const cards = (board.cards ?? []).map(withoutImage);
+  const past = (board.past ?? []).map((entry) => ({
+    ...entry,
+    cards: Array.isArray(entry?.cards) ? entry.cards.map(withoutImage) : [],
+  }));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...board, cards, past, images }),
+  );
 }

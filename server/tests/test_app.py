@@ -40,3 +40,32 @@ def test_scan_returns_the_pipeline_result(monkeypatch):
     body = response.json()
     assert body["cardsight"][0]["name"] == "Island"
     assert "Azure" in body["warnings"][0]
+
+
+def test_a_seat_id_is_accepted(monkeypatch):
+    seen = {}
+
+    async def fake(data, content_type=None, *, controller=None, zone=None, session=None, mode="add"):
+        del data, content_type, session, mode
+        seen["controller"] = controller
+        seen["zone"] = zone
+        return {"warnings": [], "cardsight": [], "ocr": [], "scene": "close"}
+
+    monkeypatch.setattr(app_module, "run_scan", fake)
+    response = TestClient(app).post(
+        "/api/scan",
+        data={"controller": "seat1", "zone": "graveyard", "mode": "add"},
+        files={"image": ("board.jpg", b"jpeg-bytes", "image/jpeg")},
+    )
+    assert response.status_code == 200
+    assert seen == {"controller": "seat1", "zone": "graveyard"}
+
+
+def test_a_compass_seat_is_rejected():
+    response = TestClient(app).post(
+        "/api/scan",
+        data={"controller": "south", "zone": "battlefield"},
+        files={"image": ("board.jpg", b"jpeg-bytes", "image/jpeg")},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Pick a seat before scanning."
