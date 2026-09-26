@@ -1,0 +1,9 @@
+{
+  "name": "Commander table",
+  "short_name": "Table",
+  "display": "standalone",
+  "background_color": "#0e1a14",
+  "theme_color": "#0e1a14",
+  "start_url": ".",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
