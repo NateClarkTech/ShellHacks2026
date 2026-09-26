@@ -8,7 +8,7 @@ The table is saved in this browser. The ruling slip is not in this build.
 
 ## Board
 
-Board, in the center, takes a photo or opens the camera. The laptop reads it with CardSight and with a title scan (Azure Read v3.2, then a fuzzy match to Scryfall names — the useful half of mtgscan, whose own client calls a Read API that retired in September 2026). A name both readers share is accepted. A name only one reader is confident about is a guess. If they disagree, pick the card. Seat, zone, and stack order are guesses until Accept. The stack lists the top first. Resolve drafts a graveyard for that spell and still waits for Accept.
+Scan is on a seat, next to Undo. That seat owns the photo. Battlefield is the default; tap Graveyard, Exile, or Command first when the camera is pointed at that pile. Hold the phone about a hand-span up and add another photo if the board does not fit. The laptop finds the cards locally, sends Azure one image of title strips, and calls CardSight only for the titles it could not read. A name both readers share is accepted. A name only one reader is confident about is a guess. A token asks for one tap. If the readers disagree, pick the card. The staged board is still the overhead sample, and on that sample seat, zone, and stack order are guesses until Accept. The stack lists the top first. Resolve drafts a graveyard for that spell and still waits for Accept.
 
 Staged loads a cached scan with no keys and no network. A live photo needs the API process, with `CARDSIGHT_API_KEY`, `AZURE_VISION_KEY`, and `AZURE_VISION_ENDPOINT` on the laptop. The phone only talks to this page.
 

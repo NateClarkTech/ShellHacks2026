@@ -17,6 +17,43 @@ def norm_name(name: str) -> str:
     return " // ".join(faces)
 
 
+# A one-character slip on a short word clears the fuzzy cutoff, so these names
+# are exact hits only. The same list, for tokens, is mirrored in src/vision.js.
+EXACT_NAMES = (
+    "Plains",
+    "Island",
+    "Swamp",
+    "Mountain",
+    "Forest",
+    "Wastes",
+    "Snow-Covered Plains",
+    "Snow-Covered Island",
+    "Snow-Covered Swamp",
+    "Snow-Covered Mountain",
+    "Snow-Covered Forest",
+    "Rat",
+    "Spirit",
+    "Goblin",
+    "Soldier",
+    "Zombie",
+    "Treasure",
+    "Food",
+    "Clue",
+    "Blood",
+    "Map",
+    "Insect",
+    "Saproling",
+    "Thopter",
+    "Servo",
+    "Gnome",
+    "Elemental",
+    "Copy",
+    "Squirrel",
+    "Faerie",
+)
+PROTECTED = {norm_name(name) for name in EXACT_NAMES}
+
+
 class NameIndex:
     """Fuzzy card-name list. The match is the part of mtgscan worth keeping."""
 
@@ -64,11 +101,15 @@ class NameIndex:
         exact = self._exact(key)
         if exact:
             return [{"name": exact, "confidence": 1.0}]
-        if not self.choices:
+        # "forests" must not become Forest, and "ratt" must not become Rat.
+        if " " not in key and len(key) < 9:
+            return []
+        choices = [choice for choice in self.choices if self._fuzzy_target(choice)]
+        if not choices:
             return []
         hits = process.extract(
             key,
-            self.choices,
+            choices,
             scorer=fuzz.ratio,
             score_cutoff=78,
             limit=limit * 3,
@@ -84,3 +125,9 @@ class NameIndex:
             if len(found) >= limit:
                 break
         return found
+
+    def _fuzzy_target(self, choice: str) -> bool:
+        if choice in PROTECTED or (" " not in choice and len(choice) < 9):
+            return False
+        display = self._exact(choice)
+        return not display or norm_name(display) not in PROTECTED

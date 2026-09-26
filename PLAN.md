@@ -19,7 +19,15 @@ One phone, flat in the center. No accounts and no second device.
 
 ## Seeing the board
 
-A photo, or the phone camera, is sent to the laptop. CardSight and a title scan both read it. Neither one knows the game. The page builds a board from where the titles sit, then the table accepts or corrects every seat, zone, and stack change. Nothing moves until Accept.
+Each player taps Scan on their own quadrant. That tap is the seat. The other three quadrants stay on life. The zone chip defaults to Battlefield; Graveyard, Exile, and Command apply to the whole photo and are set before the shutter. Hold the phone about a hand-span up, so a dozen titles are readable. Add another photo for the rest of a wide board. Retake drops only the photo just added. Done puts the life pad back.
+
+The laptop finds card rectangles locally, before any API call. A photo whose cards are too small (median long side under 200 pixels on the prepared image) returns “Move closer” and spends nothing. Azure Read gets one JPEG of title strips per photo, both short edges, and the name match picks the upright end. CardSight runs only on crops whose title is missing or under 0.75, at most 8 per photo, and it receives the warped card rather than the table. The same upload bytes are not sent twice.
+
+Two Forests in one photo stay two cards. Nothing merges on the name or the artwork. An identical file is replayed from memory. A new photo whose names are mostly names already on that seat and zone asks Replace last photo or Keep both.
+
+Seat and zone on a scanned card are final. A token-sheet name (Rat, Squirrel, Faerie, Clue, and the rest of that list) still asks for one tap. Agreed names do not. The staged board is still one overhead photo: CardSight and the title scan both read the whole frame, and seats are wedges from the center. A live table photo does not use that guess.
+
+CardSight and a title scan both read a crop. Neither one knows the game. The page builds the board, and the table still corrects a name. Nothing about a name moves until Accept, except that the seat and zone came from the tap.
 
 CardSight `POST https://api.cardsight.ai/v1/identify/card/mtg` takes the image as `image/jpeg` and the key in `X-API-Key`. The segment shortname is `mtg`, not `magic`. Magic is a live segment, 1993 through current sets. A detection is a tier, not a coordinate:
 
@@ -40,7 +48,7 @@ The title scan owns each slot, because it has the box. CardSight names are match
 
 Each card then has a controller (a seat, or none), a zone, and a stack index when the zone is the stack. Zones are battlefield, graveyard, exile, command, library, hand, and stack. The stack is one list. The highest index is the top and resolves first. Resolve drafts the graveyard for that card and still requires Accept, because a permanent enters and a countered spell may be exiled.
 
-Position is a guess. The bottom of the photo is South until someone turns that mapping. Seats are the four wedges from the center, so a card in the middle of an edge belongs to that seat.
+On the staged overhead photo, position is a guess. The bottom of the photo is South until someone turns that mapping. Seats are the four wedges from the center, so a card in the middle of an edge belongs to that seat. A scan from a seat does not use these wedges.
 
 - Near the center: the stack, controller unknown. Order in the photo is only a guess.
 - A seat's inner area: battlefield.
@@ -114,11 +122,11 @@ Sunday morning — phone brightness, rotation check from all four sides, staged 
 
 ## Stack
 
-- Frontend: one mobile page, Vite and React. Quadrant rotation is CSS. The camera is a file input with capture, plus the staged image.
+- Frontend: one mobile page, Vite and React. Quadrant rotation is CSS. Scan is a file input with capture on the seat that tapped it, plus the staged image.
 - Backend: FastAPI on the laptop. Holds the bulk-data indexes, the classifier, the rules excerpts, and the only model call.
 - Keys, server-side only: `XAI_API_KEY`, `CARDSIGHT_API_KEY` sent as `X-API-Key`, `AZURE_VISION_KEY` and `AZURE_VISION_ENDPOINT` for the title scan (Read v3.2, not mtgscan's retired v3.1 client). Before writing the Grok call, read the current quickstart on https://docs.x.ai and use the model id on that page. `grok-4.7` is the current text model as of the docs checked for this plan.
 - Classifier: scikit-learn, saved next to the training CSV so you can retrain on the spot if you add a row.
 
 ## What still breaks a live pod
 
-A real Commander board does not fit in one top-down photo. Stacked cards, tokens, and dice hiding a title will be missing until someone adds the name. The include-bystander step only finds cards the photo or the typed names already contain. The slip is a cited recommendation the table can apply or ignore, not a judge.
+A real Commander board does not fit in one top-down photo, and it does not fit in one close photo when cards touch or a title is foiled. Face-down libraries, cards under other cards, which aura is on which creature, and counters are not in the photo. The include-bystander step only finds cards the photos or the typed names already contain. The slip is a cited recommendation the table can apply or ignore, not a judge.

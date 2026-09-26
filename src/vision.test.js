@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { assembleScan, placementFor, sameCard, vote } from "./vision.js";
+import { assembleScan, duplicateShare, placementFor, sameCard, vote } from "./vision.js";
 
 test("the same card includes either face of a double-faced name", () => {
   assert.equal(sameCard("Fire // Ice", "Fire"), true);
@@ -145,4 +145,46 @@ test("the staged scan is a full board with an agreement, a dispute, and a stack"
   const peace = byName["Rest in Peace"];
   assert.equal(peace.identity, "guess");
   assert.equal(peace.box, null);
+});
+
+test("a cardsight-only crop keeps the quad, and an unread crop asks for a name", () => {
+  const [seen] = vote(
+    [{ name: "Sol Ring", confidence: "High", suggestions: [], box: { cx: 0.2, cy: 0.3 } }],
+    [],
+  );
+  assert.equal(seen.name, "Sol Ring");
+  assert.equal(seen.box.cx, 0.2);
+  const [missed] = vote([], [{ name: null, box: { cx: 0.4, cy: 0.4 }, note: "Glare. Retake this photo." }]);
+  assert.equal(missed.name, null);
+  assert.equal(missed.identity, "choose");
+  assert.match(missed.note, /Glare/);
+});
+
+test("a seat scan pins the seat and zone, and a token still asks", () => {
+  const cards = assembleScan(
+    {
+      cardsight: [],
+      ocr: [
+        { name: "Forest", confidence: 1, box: { cx: 0.2, cy: 0.2 } },
+        { name: "Squirrel", confidence: 1, box: { cx: 0.8, cy: 0.2 } },
+      ],
+    },
+    { controller: "north", zone: "graveyard", photoId: "p1" },
+  );
+  assert.equal(cards.length, 2);
+  for (const card of cards) {
+    assert.equal(card.controller, "north");
+    assert.equal(card.zone, "graveyard");
+    assert.equal(card.placement, "accepted");
+    assert.equal(card.photoId, "p1");
+  }
+  const squirrel = cards.find((card) => card.name === "Squirrel");
+  assert.equal(squirrel.identity, "confirm");
+  assert.equal(cards.find((card) => card.name === "Forest").identity, "guess");
+});
+
+test("duplicate share counts two forests twice and ignores a different one", () => {
+  assert.equal(duplicateShare(["Forest", "Forest", "Sol Ring"], ["Forest", "Island"]), 0.5);
+  assert.equal(duplicateShare(["Forest"], ["Forest", "Forest"]), 0.5);
+  assert.equal(duplicateShare([], ["Forest"]), 0);
 });

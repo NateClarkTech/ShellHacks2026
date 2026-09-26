@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { SEATS } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { sameCard } from "./vision.js";
@@ -18,13 +18,15 @@ function sourceLabel(sources) {
 function rowMeta(card, seatNames) {
   const who = card.controller ? seatNames[card.controller] || card.controller : "No seat";
   const kind =
-    card.identity === "agreed"
-      ? "Agreed"
-      : card.identity === "choose"
-        ? "Pick"
-        : card.placement === "accepted"
-          ? "Accepted"
-          : "Guess";
+    card.identity === "confirm"
+      ? "Confirm"
+      : card.identity === "agreed"
+        ? "Agreed"
+        : card.identity === "choose"
+          ? "Pick"
+          : card.placement === "accepted"
+            ? "Accepted"
+            : "Guess";
   return `${kind} · ${who} · ${ZONE_LABEL[card.zone]}`;
 }
 
@@ -33,8 +35,18 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
     draft.name === card.name &&
     draft.controller === card.controller &&
     draft.zone === card.zone;
-  const acceptedAsIs = card.placement === "accepted" && same;
-  const label = !card.name ? "Use this card" : acceptedAsIs ? "Accepted" : same ? "Accept guess" : "Accept change";
+  const needsConfirm = card.identity === "confirm";
+  const acceptedAsIs =
+    card.placement === "accepted" && !needsConfirm && card.identity !== "choose" && same;
+  const label = !card.name
+    ? "Use this card"
+    : needsConfirm && same
+      ? "Confirm"
+      : acceptedAsIs
+        ? "Accepted"
+        : same
+          ? "Accept guess"
+          : "Accept change";
   const resolving = card.zone === "stack" && draft.zone !== "stack";
 
   function pickName(name) {
@@ -154,7 +166,6 @@ export function BoardView({
   scanning,
   error,
   onClose,
-  onScan,
   onStaged,
   onRotatePhoto,
   send,
@@ -164,21 +175,15 @@ export function BoardView({
   const [draft, setDraft] = useState(null);
   const [adding, setAdding] = useState("");
   const [addSeat, setAddSeat] = useState("south");
-  const cameraRef = useRef(null);
-  const photoRef = useRef(null);
 
   function open(card, nextDraft) {
     setSelectedId(card.id);
     setDraft(nextDraft ?? { name: card.name, controller: card.controller, zone: card.zone });
   }
 
-  function take(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) onScan(file);
-  }
-
-  const pending = board.cards.filter((card) => card.identity === "choose" && !card.name);
+  const pending = board.cards.filter(
+    (card) => (card.identity === "choose" && !card.name) || card.identity === "confirm",
+  );
   const pendingIds = new Set(pending.map((card) => card.id));
   const placed = board.cards.filter((card) => !pendingIds.has(card.id));
   const stack = placed
@@ -222,13 +227,7 @@ export function BoardView({
         <strong>Board</strong>
         <div className="board-tools">
           <button type="button" disabled={scanning} onClick={onStaged}>
-            Staged
-          </button>
-          <button type="button" disabled={scanning} onClick={() => cameraRef.current?.click()}>
-            {scanning ? "Reading…" : "Camera"}
-          </button>
-          <button type="button" disabled={scanning} onClick={() => photoRef.current?.click()}>
-            Photo
+            {scanning ? "Reading…" : "Staged"}
           </button>
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
             Face {EDGE[facing]}
@@ -243,8 +242,6 @@ export function BoardView({
         <button type="button" onClick={onClose}>
           Close
         </button>
-        <input ref={cameraRef} className="file-clip" type="file" accept="image/*" capture="environment" onChange={take} />
-        <input ref={photoRef} className="file-clip" type="file" accept="image/*" onChange={take} />
       </header>
       {(error || board.warnings.length > 0) && (
         <p className="board-warn">{error || board.warnings.join(" ")}</p>
@@ -253,11 +250,18 @@ export function BoardView({
         <div className="board-facing">
           {board.cards.length === 0 && !scanning && (
             <p className="board-empty">
-              Take a photo of the table, or load the staged board. Agreed names are kept. A
-              disagreement asks you to pick. Seat, zone, and stack order stay guesses until Accept.
+              Scan from your seat. Hold the phone about a hand-span up, so the titles are readable.
+              Battlefield unless you tap Graveyard, Exile, or Command first. Agreed names stay on
+              that seat. A disagreement asks you to pick. Or load the staged board.
             </p>
           )}
           {scanning && <p className="board-empty">Reading the table…</p>}
+          {board.cards.length > 0 && (
+            <p className="board-limit">
+              Face-down libraries, cards under other cards, which aura is on which creature, and
+              counters are not in the photo.
+            </p>
+          )}
           {pending.length > 0 && (
             <section className="board-section">
               <h2>Needs a name</h2>

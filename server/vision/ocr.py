@@ -84,26 +84,32 @@ def _same_physical_card(a: dict, b: dict) -> bool:
     return dx <= width * 0.8 and dy <= height * 2.0
 
 
+def scored_matches(line: dict, index: NameIndex) -> list[dict] | None:
+    if norm_name(line.get("text") or "") in KEYWORDS:
+        return None
+    matches = index.lookup(line.get("text") or "")
+    if not matches:
+        return None
+    quality = line.get("quality", 1)
+    top = matches[0]["confidence"]
+    if top >= 0.999:
+        confidence = max(0.76, quality) if quality < 0.9 else top
+    else:
+        confidence = round(top * max(quality, 0.5), 4)
+    if confidence < 0.55:
+        return None
+    adjusted = [{"name": matches[0]["name"], "confidence": round(float(confidence), 4)}]
+    adjusted.extend(matches[1:])
+    return adjusted
+
+
 def lines_to_observations(lines: list[dict], index: NameIndex) -> list[dict]:
     scored = []
     for line in lines:
-        if norm_name(line["text"]) in KEYWORDS:
-            continue
-        matches = index.lookup(line["text"])
+        matches = scored_matches(line, index)
         if not matches:
             continue
-        quality = line.get("quality", 1)
-        top = matches[0]["confidence"]
-        if top >= 0.999:
-            confidence = max(0.76, quality) if quality < 0.9 else top
-        else:
-            confidence = round(top * max(quality, 0.5), 4)
-        if confidence < 0.55:
-            continue
-        adjusted = [{"name": matches[0]["name"], "confidence": round(confidence, 4)}]
-        for extra in matches[1:]:
-            adjusted.append(extra)
-        scored.append({"box": line["box"], "matches": adjusted})
+        scored.append({"box": line["box"], "matches": matches})
 
     order = sorted(range(len(scored)), key=lambda i: scored[i]["matches"][0]["confidence"], reverse=True)
     used = [False] * len(scored)
