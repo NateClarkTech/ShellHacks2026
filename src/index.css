@@ -71,6 +71,11 @@ input {
   -webkit-user-select: none;
 }
 
+/* A phone stays a portrait column. A desktop window is wide enough to use the full width. */
+@media (min-width: 800px) and (min-height: 600px) {
+  .table { width: 100%; }
+}
+
 .cell {
   container-type: size;
   overflow: hidden;
