@@ -168,9 +168,9 @@ function HoldButton({ delta, onDelta, children, ...rest }) {
   );
 }
 
-function Track({ label, value, hint, hot, onDelta }) {
+function Track({ label, value, hint, hot, onDelta, className }) {
   return (
-    <div className={`track${hot ? " hot" : ""}`}>
+    <div className={`track${hot ? " hot" : ""}${className ? ` ${className}` : ""}`}>
       <span className="track-label">{label}</span>
       <HoldButton delta={-1} onDelta={onDelta} aria-label={`${hint} minus 1`}>
         −
@@ -338,84 +338,87 @@ export function Seat({ seat, game, choosing, canUndo, send, onFirst, onReset }) 
                   Done
                 </button>
               </div>
-              <p className="dealt-label">Commander damage dealt to</p>
-              <button
-                type="button"
-                className={`switch${partnerOn ? " on" : ""}`}
-                role="switch"
-                aria-checked={partnerOn}
-                onClick={() => send({ type: "partner", seat, on: !partnerOn })}
-              >
-                <span className="switch-track" aria-hidden="true">
-                  <span className="switch-knob" />
-                </span>
-                Partner commanders
-              </button>
-              {partnerOn && (
-                <Field
-                  className="partner-name"
-                  value={player.partnerName ?? ""}
-                  placeholder="Tap to name your partner"
-                  label="Partner commander"
-                  maxLength={48}
-                  onCommit={(partnerName) => send({ type: "partner-name", seat, partnerName })}
-                />
-              )}
-              {people.map((id) => {
-                const name = personName(id);
-                const primary = partnerOn
-                  ? `${name} · ${player.commander || "Commander"}`
-                  : name;
-                return (
-                  <div className="damage-group" key={id}>
-                    <Track
-                      label={primary}
-                      value={game.damage?.[seat]?.[id] ?? 0}
-                      hot={(game.damage?.[seat]?.[id] ?? 0) >= 21}
-                      hint={`Commander damage dealt to ${name}`}
-                      onDelta={(delta) => send({ type: "damage", from: seat, to: id, delta })}
-                    />
-                    {partnerOn && (
-                      <Track
-                        label={`${name} · ${player.partnerName || "Partner"}`}
-                        value={game.partnerDamage?.[seat]?.[id] ?? 0}
-                        hot={(game.partnerDamage?.[seat]?.[id] ?? 0) >= 21}
-                        hint={`Partner damage dealt to ${name}`}
-                        onDelta={(delta) =>
-                          send({ type: "damage", from: seat, to: id, delta, which: "b" })
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-              <Track
-                label="Poison"
-                value={player.poison}
-                hot={player.poison >= 10}
-                hint={`${shownName || "Seat"} poison`}
-                onDelta={(delta) => send({ type: "poison", seat, delta })}
-              />
-              <p className="dealt-label">Other counters</p>
-              {(game.extras?.[seat] ?? []).map((item) => (
-                <div className="extra" key={item.id}>
-                  <Track
-                    label={item.name}
-                    value={item.value}
-                    hint={item.name}
-                    onDelta={(delta) => send({ type: "counter", seat, id: item.id, delta })}
+              <div className="sheet-body">
+                <button
+                  type="button"
+                  className={`switch${partnerOn ? " on" : ""}`}
+                  role="switch"
+                  aria-checked={partnerOn}
+                  onClick={() => send({ type: "partner", seat, on: !partnerOn })}
+                >
+                  <span className="switch-track" aria-hidden="true">
+                    <span className="switch-knob" />
+                  </span>
+                  Partner commanders
+                </button>
+                {partnerOn && (
+                  <Field
+                    className="partner-name"
+                    value={player.partnerName ?? ""}
+                    placeholder="Tap to name your partner"
+                    label="Partner commander"
+                    maxLength={48}
+                    onCommit={(partnerName) => send({ type: "partner-name", seat, partnerName })}
                   />
-                  <button
-                    type="button"
-                    className="remove"
-                    aria-label={`Remove ${item.name}`}
-                    onClick={() => send({ type: "remove-counter", seat, id: item.id })}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <AddCounter seat={seat} send={send} />
+                )}
+                <p className="dealt-label">Commander damage dealt to</p>
+                {people.map((id) => {
+                  const name = personName(id);
+                  const primary = partnerOn
+                    ? `${name} · ${player.commander || "Commander"}`
+                    : name;
+                  return (
+                    <div className="damage-group" key={id}>
+                      <Track
+                        label={primary}
+                        value={game.damage?.[seat]?.[id] ?? 0}
+                        hot={(game.damage?.[seat]?.[id] ?? 0) >= 21}
+                        hint={`Commander damage dealt to ${name}`}
+                        onDelta={(delta) => send({ type: "damage", from: seat, to: id, delta })}
+                      />
+                      {partnerOn && (
+                        <Track
+                          label={`${name} · ${player.partnerName || "Partner"}`}
+                          value={game.partnerDamage?.[seat]?.[id] ?? 0}
+                          hot={(game.partnerDamage?.[seat]?.[id] ?? 0) >= 21}
+                          hint={`Partner damage dealt to ${name}`}
+                          onDelta={(delta) =>
+                            send({ type: "damage", from: seat, to: id, delta, which: "b" })
+                          }
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+                <Track
+                  className="after-damage"
+                  label="Poison"
+                  value={player.poison}
+                  hot={player.poison >= 10}
+                  hint={`${shownName || "Seat"} poison`}
+                  onDelta={(delta) => send({ type: "poison", seat, delta })}
+                />
+                <p className="dealt-label">Other counters</p>
+                {(game.extras?.[seat] ?? []).map((item) => (
+                  <div className="extra" key={item.id}>
+                    <Track
+                      label={item.name}
+                      value={item.value}
+                      hint={item.name}
+                      onDelta={(delta) => send({ type: "counter", seat, id: item.id, delta })}
+                    />
+                    <button
+                      type="button"
+                      className="remove"
+                      aria-label={`Remove ${item.name}`}
+                      onClick={() => send({ type: "remove-counter", seat, id: item.id })}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <AddCounter seat={seat} send={send} />
+              </div>
             </div>
           )}
         </section>
