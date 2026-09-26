@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { BoardView } from "./BoardView.jsx";
 import { Seat } from "./Seat.jsx";
 import { loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
-import { SEATS, loadGame, reduce, saveGame } from "./game.js";
+import { SEATS, isDefaultName, loadGame, reduce, saveGame } from "./game.js";
 
-const ORDER = ["west", "north", "south", "east"];
-const FACES_LEFT = new Set(["west", "south"]);
+const ORDER = ["seat1", "seat2", "seat4", "seat3"];
+const FACES_LEFT = new Set(["seat1", "seat4"]);
 
 function scanMessage(error) {
   if (error?.message === "Failed to fetch") {
@@ -24,7 +24,12 @@ export default function App() {
   const [viewKey, setViewKey] = useState(0);
 
   const commanders = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].commander]));
-  const seatNames = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].name]));
+  const seatNames = Object.fromEntries(
+    SEATS.map((seat) => {
+      const name = game.seats[seat].name;
+      return [seat, name && !isDefaultName(name) ? name : ""];
+    }),
+  );
 
   useEffect(() => {
     saveGame(game);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { SEAT_ACCENT, SEATS, clockwiseFrom, lethalReasons, seatLabel } from "./game.js";
+import { SEAT_ACCENT, SEATS, clockwiseFrom, isDefaultName, lethalReasons, seatOrderName, turnLabel } from "./game.js";
 
 function Field({
   value,
@@ -225,13 +225,16 @@ export function Seat({ seat, game, choosing, canUndo, send, onFirst, onReset }) 
     if ((game.damage?.[from]?.[seat] ?? 0) >= 21) return true;
     return Boolean(game.partners?.[from]) && (game.partnerDamage?.[from]?.[seat] ?? 0) >= 21;
   });
-  const shownName = player.name || seatLabel(game.turnStart, seat);
+  const customName = player.name && !isDefaultName(player.name) ? player.name : "";
+  const shownName = customName || seatOrderName(seat);
+  const turn = turnLabel(game.turnStart, seat);
   const partnerOn = Boolean(game.partners?.[seat]);
   const people = clockwiseFrom(seat);
 
   function personName(id) {
-    if (id === seat) return player.name || "You";
-    return game.seats[id].name || seatLabel(game.turnStart, id) || "Seat";
+    const name = id === seat ? player.name : game.seats[id].name;
+    if (name && !isDefaultName(name)) return name;
+    return seatOrderName(id);
   }
 
   function commanderSources() {
@@ -239,7 +242,7 @@ export function Seat({ seat, game, choosing, canUndo, send, onFirst, onReset }) 
     const sources = [];
     for (const from of dealers) {
       const owner = game.seats[from];
-      const who = owner.name || seatLabel(game.turnStart, from) || "Seat";
+      const who = owner.name && !isDefaultName(owner.name) ? owner.name : seatOrderName(from);
       if ((game.damage?.[from]?.[seat] ?? 0) >= 21) {
         sources.push(owner.commander ? `${owner.commander} (${who})` : who);
       }
@@ -271,11 +274,12 @@ export function Seat({ seat, game, choosing, canUndo, send, onFirst, onReset }) 
           <header className="who">
             <Field
               className="seat-name"
-              value={player.name}
-              placeholder={shownName || "Name"}
+              value={customName}
+              placeholder={seatOrderName(seat)}
               label="Player name"
               onCommit={(name) => send({ type: "name", seat, name })}
             />
+            {turn && <p className="turn-mark">{turn}</p>}
             <Field
               className="commander"
               value={player.commander}

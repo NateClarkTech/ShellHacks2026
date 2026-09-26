@@ -83,16 +83,16 @@ input {
   border-radius: 4px;
 }
 
-.cell[data-seat="west"]::after,
-.cell[data-seat="south"]::after {
+.cell[data-seat="seat1"]::after,
+.cell[data-seat="seat4"]::after {
   top: 18px;
   bottom: 18px;
   left: 0;
   width: 4px;
 }
 
-.cell[data-seat="north"]::after,
-.cell[data-seat="east"]::after {
+.cell[data-seat="seat2"]::after,
+.cell[data-seat="seat3"]::after {
   top: 18px;
   bottom: 18px;
   right: 0;
@@ -113,13 +113,13 @@ input {
   container: seat / size;
 }
 
-.cell[data-seat="west"] .rotator,
-.cell[data-seat="south"] .rotator {
+.cell[data-seat="seat1"] .rotator,
+.cell[data-seat="seat4"] .rotator {
   transform: translate(-50%, -50%) rotate(90deg);
 }
 
-.cell[data-seat="north"] .rotator,
-.cell[data-seat="east"] .rotator {
+.cell[data-seat="seat2"] .rotator,
+.cell[data-seat="seat3"] .rotator {
   transform: translate(-50%, -50%) rotate(-90deg);
 }
 
@@ -168,6 +168,15 @@ button.field {
 .seat-name {
   font-size: 18px;
   font-weight: 650;
+}
+
+.turn-mark {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 78%, white);
 }
 
 .commander, button.field.commander, button.field.partner-name {

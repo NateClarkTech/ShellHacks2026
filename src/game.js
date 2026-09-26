@@ -1,19 +1,34 @@
-export const SEATS = ["south", "north", "west", "east"];
-
-// Looking down at the phone: top-left, top-right, bottom-right, bottom-left.
-export const CLOCKWISE = ["west", "north", "east", "south"];
+// Clockwise around the phone, looking down: top-left, top-right, bottom-right, bottom-left.
+export const SEATS = ["seat1", "seat2", "seat3", "seat4"];
+export const CLOCKWISE = SEATS;
 
 export const SEAT_ACCENT = {
-  south: "#e3c27a",
-  north: "#8fb8c9",
-  west: "#7dba8a",
-  east: "#d4726a",
+  seat1: "#7dba8a",
+  seat2: "#8fb8c9",
+  seat3: "#d4726a",
+  seat4: "#e3c27a",
+};
+
+const LEGACY_SEAT = {
+  west: "seat1",
+  north: "seat2",
+  east: "seat3",
+  south: "seat4",
 };
 
 const COMPASS_NAMES = new Set(["South", "North", "West", "East"]);
 const HISTORY_LIMIT = 40;
 const STORAGE_KEY = "commander-table-v2";
 const LEGACY_KEY = "commander-table-v1";
+
+export function seatId(id) {
+  return LEGACY_SEAT[id] ?? id;
+}
+
+export function seatOrderName(seat) {
+  const index = SEATS.indexOf(seatId(seat));
+  return index < 0 ? "Seat" : `Seat ${index + 1}`;
+}
 
 export function opponentsOf(seat) {
   return SEATS.filter((other) => other !== seat);
@@ -29,10 +44,12 @@ export function isDefaultName(name) {
   return !name || /^Seat [1-4]$/.test(name) || COMPASS_NAMES.has(name);
 }
 
-export function seatLabel(turnStart, seat) {
+const TURN = ["1st", "2nd", "3rd", "4th"];
+
+export function turnLabel(turnStart, seat) {
   if (!turnStart) return "";
   const index = clockwiseFrom(turnStart).indexOf(seat);
-  return index < 0 ? "" : `Seat ${index + 1}`;
+  return index < 0 ? "" : TURN[index];
 }
 
 function blankDamage() {
@@ -82,15 +99,6 @@ function withHistory(state, next) {
   const past = [...state.past, snapshot(state)];
   if (past.length > HISTORY_LIMIT) past.shift();
   return { ...state, ...next, past };
-}
-
-function renameDefaults(seats, start) {
-  const next = { ...seats };
-  clockwiseFrom(start).forEach((id, index) => {
-    const seat = next[id];
-    if (isDefaultName(seat.name)) next[id] = { ...seat, name: `Seat ${index + 1}` };
-  });
-  return next;
 }
 
 // 21 combat damage from a single commander, 10 poison, or life at 0 or below.
@@ -230,12 +238,8 @@ export function reduce(state, action) {
       });
     }
     case "first": {
-      if (!CLOCKWISE.includes(action.seat)) return state;
-      return withHistory(state, {
-        seats: renameDefaults(state.seats, action.seat),
-        damage: state.damage,
-        turnStart: action.seat,
-      });
+      if (!CLOCKWISE.includes(action.seat) || state.turnStart === action.seat) return state;
+      return withHistory(state, { turnStart: action.seat });
     }
     case "undo": {
       if (state.past.length === 0) return state;
@@ -247,6 +251,38 @@ export function reduce(state, action) {
     default:
       return state;
   }
+}
+
+function remapSeatMap(map) {
+  const next = {};
+  if (!map || typeof map !== "object") return next;
+  for (const [key, value] of Object.entries(map)) next[seatId(key)] = value;
+  return next;
+}
+
+function remapDamage(damage) {
+  const next = {};
+  if (!damage || typeof damage !== "object") return next;
+  for (const [from, row] of Object.entries(damage)) next[seatId(from)] = remapSeatMap(row);
+  return next;
+}
+
+function remapTable(table) {
+  if (!table || typeof table !== "object") return table;
+  const { past, ...rest } = table;
+  const next = { ...rest };
+  if (rest.seats) next.seats = remapSeatMap(rest.seats);
+  if (rest.damage) next.damage = remapDamage(rest.damage);
+  if (rest.partnerDamage) next.partnerDamage = remapDamage(rest.partnerDamage);
+  if (rest.partners) next.partners = remapSeatMap(rest.partners);
+  if (rest.extras) next.extras = remapSeatMap(rest.extras);
+  if (rest.turnStart != null) next.turnStart = seatId(rest.turnStart);
+  if (Array.isArray(past)) next.past = past.map((entry) => remapTable(entry));
+  return next;
+}
+
+export function normalizeStoredGame(parsed) {
+  return sanitize(remapTable(parsed));
 }
 
 function sanitize(parsed) {
@@ -292,7 +328,7 @@ export function loadGame() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_KEY);
     if (!raw) return createGame();
-    return sanitize(JSON.parse(raw)) ?? createGame();
+    return normalizeStoredGame(JSON.parse(raw)) ?? createGame();
   } catch {
     return createGame();
   }
