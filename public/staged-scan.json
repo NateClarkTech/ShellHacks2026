@@ -1,0 +1,53 @@
+{
+  "warnings": [],
+  "cardsight": [
+    { "name": "Swords to Plowshares", "confidence": 0.95, "suggestions": [] },
+    { "name": "Humility", "confidence": 0.95, "suggestions": [] },
+    { "name": "Rest in Peace", "confidence": 0.82, "suggestions": [] },
+    { "name": "Damnation", "confidence": 0.82, "suggestions": ["Wrath of God"] }
+  ],
+  "ocr": [
+    {
+      "name": "Swords to Plowshares",
+      "confidence": 1,
+      "alternatives": [],
+      "box": { "cx": 0.32, "cy": 0.72, "w": 0.12, "h": 0.03 }
+    },
+    {
+      "name": "Humility",
+      "confidence": 1,
+      "alternatives": [],
+      "box": { "cx": 0.62, "cy": 0.28, "w": 0.12, "h": 0.03 }
+    },
+    {
+      "name": "Wrath of God",
+      "confidence": 0.92,
+      "alternatives": ["Damnation"],
+      "box": { "cx": 0.5, "cy": 0.5, "w": 0.1, "h": 0.03 }
+    },
+    {
+      "name": "Sol Ring",
+      "confidence": 1,
+      "alternatives": [],
+      "box": { "cx": 0.78, "cy": 0.48, "w": 0.1, "h": 0.03 }
+    },
+    {
+      "name": "Eternal Witness",
+      "confidence": 1,
+      "alternatives": [],
+      "box": { "cx": 0.9, "cy": 0.68, "w": 0.1, "h": 0.03 }
+    },
+    {
+      "name": "Path to Exile",
+      "confidence": 0.96,
+      "alternatives": [],
+      "box": { "cx": 0.9, "cy": 0.32, "w": 0.1, "h": 0.03 }
+    },
+    {
+      "name": "Atraxa, Praetors' Voice",
+      "confidence": 0.66,
+      "alternatives": ["Atraxa, Grand Unifier"],
+      "box": { "cx": 0.52, "cy": 0.96, "w": 0.12, "h": 0.03 }
+    }
+  ]
+}

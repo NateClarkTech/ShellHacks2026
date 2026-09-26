@@ -1,17 +1,38 @@
 import { useEffect, useState } from "react";
+import { BoardView } from "./BoardView.jsx";
 import { Seat } from "./Seat.jsx";
-import { loadGame, reduce, saveGame } from "./game.js";
+import { loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
+import { SEATS, loadGame, reduce, saveGame } from "./game.js";
 
 const ORDER = ["west", "north", "south", "east"];
 const FACES_LEFT = new Set(["west", "south"]);
 
+function scanMessage(error) {
+  if (error?.message === "Failed to fetch") {
+    return "The scan service is not running. Start it on the laptop, or load the staged board.";
+  }
+  return error?.message || "The scan did not finish.";
+}
+
 export default function App() {
   const [game, setGame] = useState(() => loadGame());
   const [resetAsk, setResetAsk] = useState(null);
+  const [board, setBoard] = useState(() => loadBoard());
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [viewKey, setViewKey] = useState(0);
+
+  const commanders = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].commander]));
+  const seatNames = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].name]));
 
   useEffect(() => {
     saveGame(game);
   }, [game]);
+
+  useEffect(() => {
+    saveBoard(board);
+  }, [board]);
 
   useEffect(() => {
     let lock = null;
@@ -45,6 +66,49 @@ export default function App() {
     setGame((current) => reduce(current, action));
   }
 
+  function sendBoard(action) {
+    setBoard((current) => reduceBoard(current, action));
+  }
+
+  async function scanFile(file) {
+    setScanning(true);
+    setScanError("");
+    setBoardOpen(true);
+    try {
+      const body = new FormData();
+      body.append("image", file);
+      const response = await fetch("/api/scan", { method: "POST", body });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const detail = payload?.detail;
+        throw new Error(typeof detail === "string" ? detail : "The scan did not finish.");
+      }
+      setBoard((current) => replaceWithScan(current, payload, { commanders }));
+      setViewKey((key) => key + 1);
+    } catch (error) {
+      setScanError(scanMessage(error));
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  async function loadStaged() {
+    setScanning(true);
+    setScanError("");
+    setBoardOpen(true);
+    try {
+      const response = await fetch("/staged-scan.json");
+      if (!response.ok) throw new Error("The staged board is missing.");
+      const payload = await response.json();
+      setBoard((current) => replaceWithScan(current, payload, { commanders }));
+      setViewKey((key) => key + 1);
+    } catch (error) {
+      setScanError(scanMessage(error));
+    } finally {
+      setScanning(false);
+    }
+  }
+
   const choosing = !game.turnStart;
 
   return (
@@ -61,6 +125,28 @@ export default function App() {
           onReset={() => setResetAsk(seat)}
         />
       ))}
+      {!boardOpen && !resetAsk && (
+        <button type="button" className="board-launch" onClick={() => setBoardOpen(true)}>
+          Board
+        </button>
+      )}
+      {boardOpen && (
+        <div className="scrim">
+          <BoardView
+            key={viewKey}
+            board={board}
+            seatNames={seatNames}
+            commanders={commanders}
+            scanning={scanning}
+            error={scanError}
+            onClose={() => setBoardOpen(false)}
+            onScan={scanFile}
+            onStaged={loadStaged}
+            onRotatePhoto={(direction) => sendBoard({ type: "rotate", direction, commanders })}
+            send={sendBoard}
+          />
+        </div>
+      )}
       {resetAsk && (
         <div className="scrim">
           <div
