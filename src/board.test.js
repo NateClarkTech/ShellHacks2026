@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boardFromScan, reduceBoard, replaceWithScan } from "./board.js";
+import { appendScan, boardFromScan, reduceBoard, replaceWithScan } from "./board.js";
 
 function scan() {
   return boardFromScan({
@@ -175,6 +175,65 @@ test("a new scan undoes back to the board it replaced", () => {
   const restored = reduceBoard(next, { type: "undo" });
   assert.equal(restored.cards.some((card) => card.name === "Swords to Plowshares"), true);
   assert.equal(restored.cards.some((card) => card.name === "Island"), false);
+});
+
+test("a seat scan appends, and a retake drops only that photo", () => {
+  let board = boardFromScan({
+    cardsight: [],
+    ocr: [{ name: "Swords to Plowshares", confidence: 1, box: { cx: 0.4, cy: 0.7 } }],
+  });
+  const south = board.cards.find((card) => card.name === "Swords to Plowshares");
+  board = appendScan(
+    board,
+    {
+      photoId: "north-1",
+      cardsight: [],
+      ocr: [{ name: "Forest", confidence: 1, box: { cx: 0.2, cy: 0.2 } }],
+    },
+    { controller: "seat2", zone: "battlefield" },
+  );
+  assert.equal(board.cards.find((card) => card.id === south.id).controller, "seat4");
+  const forest = board.cards.find((card) => card.name === "Forest");
+  assert.equal(forest.controller, "seat2");
+  assert.equal(forest.zone, "battlefield");
+  assert.equal(forest.photoId, "north-1");
+  board = appendScan(
+    board,
+    {
+      photoId: "north-2",
+      cardsight: [],
+      ocr: [{ name: "Island", confidence: 1, box: { cx: 0.3, cy: 0.3 } }],
+    },
+    { controller: "seat2", zone: "graveyard", mode: "retake", replacePhotoId: "north-1" },
+  );
+  assert.equal(board.cards.some((card) => card.photoId === "north-1"), false);
+  assert.equal(board.cards.some((card) => card.name === "Island"), true);
+  assert.equal(board.cards.find((card) => card.id === south.id).name, "Swords to Plowshares");
+  const undone = reduceBoard(board, { type: "undo" });
+  assert.equal(undone.cards.some((card) => card.name === "Forest"), true);
+  assert.equal(undone.cards.some((card) => card.name === "Island"), false);
+});
+
+test("confirming a token takes it off the confirm list", () => {
+  let board = appendScan(
+    boardFromScan({ cardsight: [], ocr: [] }),
+    {
+      photoId: "p",
+      cardsight: [],
+      ocr: [{ name: "Rat", confidence: 1, box: { cx: 0.2, cy: 0.2 } }],
+    },
+    { controller: "seat1", zone: "battlefield" },
+  );
+  const rat = board.cards.find((card) => card.name === "Rat");
+  assert.equal(rat.identity, "confirm");
+  board = reduceBoard(board, {
+    type: "apply",
+    id: rat.id,
+    name: rat.name,
+    controller: rat.controller,
+    zone: rat.zone,
+  });
+  assert.equal(board.cards.find((card) => card.id === rat.id).identity, "chosen");
 });
 
 test("add and remove", () => {

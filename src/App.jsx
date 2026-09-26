@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { BoardView } from "./BoardView.jsx";
 import { Seat } from "./Seat.jsx";
-import { loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
-import { SEATS, isDefaultName, loadGame, reduce, saveGame } from "./game.js";
+import { ZONE_LABEL, appendScan, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
+import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
+import { assembleScan, duplicateShare } from "./vision.js";
 
 const ORDER = ["seat1", "seat2", "seat4", "seat3"];
 const FACES_LEFT = new Set(["seat1", "seat4"]);
@@ -21,6 +22,13 @@ export default function App() {
   const [boardOpen, setBoardOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState("");
+  const [scanStep, setScanStep] = useState(null);
+  const [scanSeat, setScanSeat] = useState(null);
+  const [scanZone, setScanZone] = useState(null);
+  const [scanNote, setScanNote] = useState("");
+  const [scanStarted, setScanStarted] = useState(false);
+  const [pendingDup, setPendingDup] = useState(null);
+  const [sessionId] = useState(() => globalThis.crypto?.randomUUID?.() ?? `scan-${Date.now()}`);
   const [viewKey, setViewKey] = useState(0);
 
   const commanders = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].commander]));
@@ -75,23 +83,124 @@ export default function App() {
     setBoard((current) => reduceBoard(current, action));
   }
 
-  async function scanFile(file) {
+  function startScan() {
+    setScanStep("player");
+    setScanSeat(null);
+    setScanZone(null);
+    setScanNote("");
+    setScanStarted(false);
+    setPendingDup(null);
+    setScanError("");
+  }
+
+  function chooseScanSeat(seat) {
+    setScanSeat(seat);
+    setScanZone(null);
+    setScanStep("zone");
+    setPendingDup(null);
+    setScanNote("");
+  }
+
+  function chooseScanZone(zone) {
+    setScanZone(zone);
+    setScanStep("shoot");
+    setPendingDup(null);
+    setScanNote("");
+  }
+
+  function scanBack() {
+    setPendingDup(null);
+    setScanNote("");
+    if (scanStep === "shoot") {
+      setScanZone(null);
+      setScanStep("zone");
+      return;
+    }
+    setScanSeat(null);
+    setScanStep("player");
+  }
+
+  function doneScan() {
+    setScanStep(null);
+    setPendingDup(null);
+    setScanNote("");
+  }
+
+  function closeBoard() {
+    setBoardOpen(false);
+    doneScan();
+  }
+
+  function commitScan(payload, replacePhotoId) {
+    setBoard((current) =>
+      appendScan(current, payload, {
+        controller: scanSeat,
+        zone: scanZone,
+        mode: replacePhotoId ? "retake" : "add",
+        replacePhotoId,
+        commanders,
+      }),
+    );
+    setScanStarted(true);
+    setPendingDup(null);
+  }
+
+  async function captureScan(file, mode) {
+    if (!scanSeat || !scanZone || !file) return;
     setScanning(true);
     setScanError("");
-    setBoardOpen(true);
+    setScanNote("Reading…");
+    setPendingDup(null);
     try {
       const body = new FormData();
       body.append("image", file);
+      body.append("controller", scanSeat);
+      body.append("zone", scanZone);
+      body.append("session", sessionId);
+      body.append("mode", mode);
       const response = await fetch("/api/scan", { method: "POST", body });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const detail = payload?.detail;
         throw new Error(typeof detail === "string" ? detail : "The scan did not finish.");
       }
-      setBoard((current) => replaceWithScan(current, payload, { commanders }));
-      setViewKey((key) => key + 1);
+      if (payload.replayed) {
+        setScanNote("That photo was already added.");
+        return;
+      }
+      if (payload.scene === "wide" || payload.scene === "empty") {
+        setScanNote(payload.warnings?.[0] || "No cards found.");
+        return;
+      }
+      const preview = assembleScan(payload, {
+        controller: scanSeat,
+        zone: scanZone,
+        photoId: payload.photoId,
+      });
+      const review = preview.some(
+        (card) => card.identity === "confirm" || (card.identity === "choose" && !card.name),
+      );
+      const who = seatNames[scanSeat] || seatOrderName(scanSeat);
+      const glare = payload.glare ? ` ${payload.glare} washed out.` : "";
+      const summary = `${preview.length} on ${who} · ${ZONE_LABEL[scanZone]}.${glare}`;
+      const previous = lastPhotoId(board, scanSeat, scanZone);
+      const share = duplicateShare(
+        board.cards
+          .filter((card) => card.controller === scanSeat && card.zone === scanZone)
+          .map((card) => card.name),
+        preview.map((card) => card.name),
+      );
+      if (mode === "add" && previous && share >= 0.6) {
+        setPendingDup({ payload, replacePhotoId: previous });
+        setScanNote(`${summary} This looks like the last photo.`);
+        return;
+      }
+      commitScan(payload, mode === "retake" ? previous : null);
+      setScanNote(review ? `${summary} Confirm the rest on the board when you are done.` : summary);
     } catch (error) {
-      setScanError(scanMessage(error));
+      const message = scanMessage(error);
+      setScanNote(message);
+      setScanError(message);
     } finally {
       setScanning(false);
     }
@@ -144,11 +253,36 @@ export default function App() {
             commanders={commanders}
             scanning={scanning}
             error={scanError}
-            onClose={() => setBoardOpen(false)}
-            onScan={scanFile}
+            onClose={closeBoard}
             onStaged={loadStaged}
             onRotatePhoto={(direction) => sendBoard({ type: "rotate", direction, commanders })}
             send={sendBoard}
+            scan={{
+              step: scanStep,
+              seat: scanSeat,
+              zone: scanZone,
+              note: scanNote,
+              busy: scanning,
+              started: Boolean(scanSeat && scanZone && lastPhotoId(board, scanSeat, scanZone)),
+              added: scanStarted,
+              pending: Boolean(pendingDup),
+              onStart: startScan,
+              onSeat: chooseScanSeat,
+              onZone: chooseScanZone,
+              onBack: scanBack,
+              onCapture: captureScan,
+              onDone: doneScan,
+              onReplace: () => {
+                if (!pendingDup) return;
+                commitScan(pendingDup.payload, pendingDup.replacePhotoId);
+                setScanNote("Replaced the last photo.");
+              },
+              onKeep: () => {
+                if (!pendingDup) return;
+                commitScan(pendingDup.payload, null);
+                setScanNote("Kept both photos.");
+              },
+            }}
           />
         </div>
       )}

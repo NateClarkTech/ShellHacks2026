@@ -37,6 +37,45 @@ export function replaceWithScan(state, payload, options = {}) {
   return { ...next, past };
 }
 
+export function lastPhotoId(state, controller, zone) {
+  const cards = state?.cards ?? [];
+  for (let index = cards.length - 1; index >= 0; index -= 1) {
+    const card = cards[index];
+    if (card.controller === controller && card.zone === zone && card.photoId) return card.photoId;
+  }
+  return null;
+}
+
+export function appendScan(state, payload, options = {}) {
+  const photoId = payload?.photoId || null;
+  const kept =
+    options.mode === "retake" && options.replacePhotoId
+      ? state.cards.filter((card) => card.photoId !== options.replacePhotoId)
+      : state.cards;
+  let nextNumber = 0;
+  for (const card of kept) {
+    const match = /^card-(\d+)$/.exec(card.id);
+    if (match) nextNumber = Math.max(nextNumber, Number(match[1]));
+  }
+  const added = assembleScan(payload, {
+    controller: options.controller,
+    zone: options.zone,
+    photoId,
+    commanders: options.commanders,
+  }).map((card) => {
+    nextNumber += 1;
+    return { ...card, id: `card-${nextNumber}`, photoId };
+  });
+  const warnings = Array.isArray(payload?.warnings)
+    ? payload.warnings.filter((item) => typeof item === "string")
+    : (state.warnings ?? []);
+  return withHistory(state, {
+    cards: restack([...kept, ...added]),
+    orientation: state.orientation,
+    warnings,
+  });
+}
+
 function snapshot(state) {
   return structuredClone({
     cards: state.cards,
@@ -97,7 +136,7 @@ export function reduceBoard(state, action) {
             : {
                 ...item,
                 name,
-                identity: nameChanged ? "chosen" : item.identity,
+                identity: nameChanged || item.identity === "confirm" ? "chosen" : item.identity,
                 controller,
                 zone,
                 stackIndex: stayingOnStack ? item.stackIndex : null,

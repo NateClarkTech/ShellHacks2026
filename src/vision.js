@@ -1,4 +1,4 @@
-import { seatOrderName } from "./game.js";
+import { SEATS, seatId, seatOrderName } from "./game.js";
 
 // CardSight names a card and does not return a box. The title scan (Azure Read
 // plus a name list, the useful half of mtgscan) returns boxes. A slot is one
@@ -11,6 +11,31 @@ const TIERS = { high: 0.95, medium: 0.82, low: 0.62 };
 export const GUESS_AT = 0.75;
 
 export const ZONES = ["battlefield", "graveyard", "exile", "command", "library", "hand", "stack"];
+
+const PIN_ZONES = ["battlefield", "graveyard", "exile", "command"];
+
+// Keep this in step with EXACT_NAMES tokens in server/vision/names.py.
+const TOKEN_NAMES = [
+  "Rat",
+  "Spirit",
+  "Goblin",
+  "Soldier",
+  "Zombie",
+  "Treasure",
+  "Food",
+  "Clue",
+  "Blood",
+  "Map",
+  "Insect",
+  "Saproling",
+  "Thopter",
+  "Servo",
+  "Gnome",
+  "Elemental",
+  "Copy",
+  "Squirrel",
+  "Faerie",
+];
 
 const CENTER = 0.14;
 const OUTER = 0.4;
@@ -97,7 +122,7 @@ function readNote(identity, confidence, sources) {
   return "Only one reader saw this. Check the name.";
 }
 
-function finish(name, identity, confidence, sources, candidates, box) {
+function finish(name, identity, confidence, sources, candidates, box, note) {
   const uniqueSources = [...new Set(sources)];
   return {
     name,
@@ -106,8 +131,34 @@ function finish(name, identity, confidence, sources, candidates, box) {
     sources: uniqueSources,
     candidates,
     box: box ?? null,
-    note: readNote(identity, confidence, uniqueSources),
+    note: note || readNote(identity, confidence, uniqueSources),
   };
+}
+
+export function isTokenName(name) {
+  const key = normName(name);
+  return TOKEN_NAMES.some((token) => normName(token) === key);
+}
+
+// Share of the new names that are already on this seat and zone. Two Forests
+// count twice. A name match is not enough to merge them; the seat asks first.
+export function duplicateShare(currentNames, nextNames) {
+  const bag = new Map();
+  for (const name of currentNames ?? []) {
+    const key = normName(name);
+    if (!key) continue;
+    bag.set(key, (bag.get(key) ?? 0) + 1);
+  }
+  const incoming = (nextNames ?? []).map((name) => normName(name)).filter(Boolean);
+  if (incoming.length === 0) return 0;
+  let hits = 0;
+  for (const key of incoming) {
+    const left = bag.get(key) ?? 0;
+    if (left <= 0) continue;
+    bag.set(key, left - 1);
+    hits += 1;
+  }
+  return hits / incoming.length;
 }
 
 // One-way near-misses stay two cards. Merging requires each side to name the other,
@@ -150,19 +201,32 @@ export function vote(cardsight = [], ocr = []) {
         "cardsight",
         asConfidence(detection.confidence),
       ),
+      box: detection.box ?? null,
       used: false,
     });
   }
 
   const slots = [];
   for (const line of ocr) {
-    if (!line?.name) continue;
+    if (!line) continue;
+    if (!line.name) {
+      slots.push({
+        ocrName: null,
+        ocrConfidence: 0,
+        alternatives: [],
+        box: line.box ?? null,
+        sight: null,
+        blankNote: line.note || "The title could not be read.",
+      });
+      continue;
+    }
     slots.push({
       ocrName: line.name,
       ocrConfidence: asConfidence(line.confidence),
       alternatives: asAlternatives(line.alternatives, "ocr", asConfidence(line.confidence)),
       box: line.box ?? null,
       sight: null,
+      blankNote: null,
     });
   }
 
@@ -189,6 +253,10 @@ export function vote(cardsight = [], ocr = []) {
   const result = [];
   for (const slot of slots) {
     if (!slot.sight) {
+      if (slot.blankNote) {
+        result.push(finish(null, "choose", 0, ["ocr"], [], slot.box, slot.blankNote));
+        continue;
+      }
       result.push(
         singleSource(slot.ocrName, slot.ocrConfidence, ["ocr"], slot.alternatives, slot.box),
       );
@@ -221,7 +289,7 @@ export function vote(cardsight = [], ocr = []) {
 
   for (const sight of sights) {
     if (sight.used) continue;
-    result.push(singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, null));
+    result.push(singleSource(sight.name, sight.confidence, ["cardsight"], sight.suggestions, sight.box));
   }
   return result;
 }
@@ -336,21 +404,43 @@ function restack(cards) {
   );
 }
 
-export function assembleScan(payload, { orientation = 0, commanders = {} } = {}) {
+export function assembleScan(
+  payload,
+  { orientation = 0, commanders = {}, controller = null, zone = null, photoId = null } = {},
+) {
   const slots = vote(payload?.cardsight, payload?.ocr);
+  const controllerId = SEATS.includes(seatId(controller)) ? seatId(controller) : null;
+  const pinned = Boolean(controllerId);
+  const pinnedZone = PIN_ZONES.includes(zone) ? zone : "battlefield";
   const cards = slots.map((slot, index) => {
+    let identity = slot.identity;
+    let note = slot.note;
+    if (slot.name && isTokenName(slot.name) && identity !== "choose") {
+      identity = "confirm";
+      note = "Token. Confirm the name.";
+    }
     const card = {
       id: `card-${index + 1}`,
       name: slot.name,
       candidates: slot.candidates,
-      identity: slot.identity,
+      identity,
       confidence: slot.confidence,
       sources: slot.sources,
       box: slot.box,
       stackIndex: null,
       placement: "guess",
-      note: slot.note,
+      note,
+      photoId: photoId ?? null,
     };
+    if (pinned) {
+      return {
+        ...card,
+        controller: controllerId,
+        zone: pinnedZone,
+        placement: "accepted",
+        reason: "Scanned from this seat.",
+      };
+    }
     return { ...card, ...placementFor(card, orientation, commanders) };
   });
   return restack(cards);

@@ -21,3 +21,12 @@ def test_exact_fuzzy_and_a_face():
     assert index.lookup("Fire")[0]["name"] == "Fire // Ice"
     assert index.lookup("Fire Ice")[0]["name"] == "Fire // Ice"
     assert index.lookup("No") == []
+
+
+def test_short_names_are_exact_and_a_spaced_miss_still_matches():
+    index = NameIndex(["Forest", "Rat", "Rat Colony", "Sol Ring", "Flood"])
+    assert index.lookup("Forest")[0]["name"] == "Forest"
+    assert index.lookup("forests") == []
+    assert index.lookup("Rat")[0]["name"] == "Rat"
+    assert index.lookup("Ratt") == []
+    assert index.lookup("sol rirg")[0]["name"] == "Sol Ring"

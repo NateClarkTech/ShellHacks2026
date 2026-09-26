@@ -1,7 +1,7 @@
 import json
 import os
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.vision.scan import CACHE, run_scan
@@ -32,11 +32,42 @@ def health():
     }
 
 
+SEATS = {"south", "north", "east", "west"}
+SCAN_ZONES = {"battlefield", "graveyard", "exile", "command"}
+
+
 @app.post("/api/scan")
-async def scan(image: UploadFile = File(...)):
+async def scan(
+    image: UploadFile = File(...),
+    controller: str | None = Form(None),
+    zone: str | None = Form(None),
+    session: str | None = Form(None),
+    mode: str | None = Form(None),
+):
     data = await image.read()
     if not data:
         raise HTTPException(status_code=400, detail="That image is empty.")
     if len(data) > 20 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="That image is larger than 20MB.")
-    return await run_scan(data, image.content_type)
+    if controller is None:
+        return await run_scan(data, image.content_type)
+    if controller not in SEATS:
+        raise HTTPException(status_code=400, detail="Pick a seat before scanning.")
+    if zone is None:
+        zone = "battlefield"
+    if zone not in SCAN_ZONES:
+        raise HTTPException(status_code=400, detail="That zone cannot be scanned.")
+    if mode is None:
+        mode = "add"
+    if mode not in {"add", "retake"}:
+        raise HTTPException(status_code=400, detail="That scan mode is not supported.")
+    if session is not None and len(session) > 80:
+        session = session[:80]
+    return await run_scan(
+        data,
+        image.content_type,
+        controller=controller,
+        zone=zone,
+        session=session,
+        mode=mode,
+    )
