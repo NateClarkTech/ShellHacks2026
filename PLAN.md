@@ -19,7 +19,7 @@ One phone, flat in the center. No accounts and no second device.
 
 ## Seeing the board
 
-Each player taps Scan on their own quadrant. That tap is the seat. The other three quadrants stay on life. The zone chip defaults to Battlefield; Graveyard, Exile, and Command apply to the whole photo and are set before the shutter. Hold the phone about a hand-span up, so a dozen titles are readable. Add another photo for the rest of a wide board. Retake drops only the photo just added. Done puts the life pad back.
+Open the board and tap Scan. Pick the player, then the zone. The seat tiles stay on life. Graveyard, Exile, and Command apply to the whole photo and are chosen before the shutter. Battlefield is one of those choices. Hold the phone about a hand-span up, so a dozen titles are readable. Add another photo for the rest of a wide board. Retake drops only the photo just added. Done leaves the cards on the board.
 
 The laptop finds card rectangles locally, before any API call. A photo whose cards are too small (median long side under 200 pixels on the prepared image) returns “Move closer” and spends nothing. Azure Read gets one JPEG of title strips per photo, both short edges, and the name match picks the upright end. CardSight runs only on crops whose title is missing or under 0.75, at most 8 per photo, and it receives the warped card rather than the table. The same upload bytes are not sent twice.
 

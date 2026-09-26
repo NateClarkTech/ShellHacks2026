@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SEATS } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { sameCard } from "./vision.js";
 
 const SEAT_ORDER = ["south", "north", "west", "east"];
 const ZONE_ORDER = ["command", "battlefield", "graveyard", "exile", "library", "hand"];
+const SCAN_ZONES = ["battlefield", "graveyard", "exile", "command"];
 const EDGE = ["South", "West", "North", "East"];
 
 function sourceLabel(sources) {
@@ -143,6 +144,107 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
   );
 }
 
+function ScanWizard({ scan, seatNames }) {
+  const cameraRef = useRef(null);
+  const fileRef = useRef(null);
+  const modeRef = useRef("add");
+  if (!scan?.step) return null;
+
+  function openPicker(mode, source) {
+    modeRef.current = mode;
+    const input = source === "file" ? fileRef.current : cameraRef.current;
+    input?.click();
+  }
+
+  function take(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) scan.onCapture(file, modeRef.current);
+  }
+
+  const who = seatNames[scan.seat] || scan.seat;
+  const where = ZONE_LABEL[scan.zone];
+
+  return (
+    <section className="scan-panel board-scan" aria-label="Scan">
+      {scan.step === "player" && (
+        <>
+          <p className="scan-note">Which player is this photo of?</p>
+          <div className="choice-row">
+            {SEAT_ORDER.map((seat) => (
+              <button key={seat} type="button" disabled={scan.busy} onClick={() => scan.onSeat(seat)}>
+                {seatNames[seat] || seat}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {scan.step === "zone" && (
+        <>
+          <p className="scan-note">{who}. Which zone?</p>
+          <div className="choice-row">
+            {SCAN_ZONES.map((zone) => (
+              <button key={zone} type="button" disabled={scan.busy} onClick={() => scan.onZone(zone)}>
+                {ZONE_LABEL[zone]}
+              </button>
+            ))}
+          </div>
+          <button type="button" disabled={scan.busy} onClick={scan.onBack}>
+            Change player
+          </button>
+        </>
+      )}
+      {scan.step === "shoot" && (
+        <>
+          <p className="scan-note">
+            {scan.note || `${who} · ${where}. Hold the phone a hand-span up, so the titles are readable.`}
+          </p>
+          {scan.pending ? (
+            <div className="scan-actions">
+              <button type="button" disabled={scan.busy} onClick={scan.onReplace}>
+                Replace last
+              </button>
+              <button type="button" disabled={scan.busy} onClick={scan.onKeep}>
+                Keep both
+              </button>
+            </div>
+          ) : (
+            <div className="scan-actions">
+              <button type="button" disabled={scan.busy} onClick={() => openPicker("add", "camera")}>
+                {scan.busy ? "Reading…" : scan.started ? "Add photo" : "Camera"}
+              </button>
+              <button type="button" disabled={scan.busy} onClick={() => openPicker("add", "file")}>
+                Upload
+              </button>
+              <button type="button" disabled={scan.busy || !scan.started} onClick={() => openPicker("retake", "camera")}>
+                Retake
+              </button>
+              <button type="button" disabled={scan.busy || !scan.started} onClick={() => openPicker("retake", "file")}>
+                Reupload
+              </button>
+            </div>
+          )}
+          <button type="button" disabled={scan.busy} onClick={scan.onBack}>
+            Change zone
+          </button>
+          <input
+            ref={cameraRef}
+            className="file-clip"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={take}
+          />
+          <input ref={fileRef} className="file-clip" type="file" accept="image/*" onChange={take} />
+        </>
+      )}
+      <button type="button" disabled={scan.busy} onClick={scan.onDone}>
+        {scan.added ? "Done" : "Cancel"}
+      </button>
+    </section>
+  );
+}
+
 function CardRow({ card, seatNames, selected, onOpen, children }) {
   return (
     <div className="card-block">
@@ -169,6 +271,7 @@ export function BoardView({
   onStaged,
   onRotatePhoto,
   send,
+  scan,
 }) {
   const [facing, setFacing] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
@@ -226,7 +329,10 @@ export function BoardView({
       <header className="board-bar">
         <strong>Board</strong>
         <div className="board-tools">
-          <button type="button" disabled={scanning} onClick={onStaged}>
+          <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={scan?.onStart}>
+            Scan
+          </button>
+          <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={onStaged}>
             {scanning ? "Reading…" : "Staged"}
           </button>
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
@@ -246,13 +352,13 @@ export function BoardView({
       {(error || board.warnings.length > 0) && (
         <p className="board-warn">{error || board.warnings.join(" ")}</p>
       )}
+      <ScanWizard scan={scan} seatNames={seatNames} />
       <div className="board-rotator" data-facing={facing}>
         <div className="board-facing">
           {board.cards.length === 0 && !scanning && (
             <p className="board-empty">
-              Scan from your seat. Hold the phone about a hand-span up, so the titles are readable.
-              Battlefield unless you tap Graveyard, Exile, or Command first. Agreed names stay on
-              that seat. A disagreement asks you to pick. Or load the staged board.
+              Tap Scan. Pick the player, then the zone, then take or upload a close photo. Agreed
+              names stay on that player. A disagreement asks you to pick. Or load the staged board.
             </p>
           )}
           {scanning && <p className="board-empty">Reading the table…</p>}

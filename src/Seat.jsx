@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { ZONE_LABEL } from "./board.js";
 import { SEAT_ACCENT, lethalReasons, opponentsOf } from "./game.js";
 
 function Field({ value, placeholder, label, onCommit, className }) {
@@ -115,9 +114,7 @@ const REASON_TEXT = {
   commander: "21 commander",
 };
 
-const SCAN_ZONES = ["battlefield", "graveyard", "exile", "command"];
-
-export function Seat({ seat, game, canUndo, resetArmed, send, capture, scanLocked, onScan }) {
+export function Seat({ seat, game, canUndo, resetArmed, send }) {
   const player = game.seats[seat];
   const reasons = lethalReasons(game, seat);
   const dealers = opponentsOf(seat).filter(
@@ -136,20 +133,6 @@ export function Seat({ seat, game, canUndo, resetArmed, send, capture, scanLocke
     name: game.seats[to].name || to,
     amount: game.damage[seat][to] ?? 0,
   }));
-  const cameraRef = useRef(null);
-  const modeRef = useRef("add");
-
-  function openCamera(mode) {
-    modeRef.current = mode;
-    cameraRef.current?.click();
-  }
-
-  function take(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) capture?.onCapture(file, modeRef.current);
-  }
-
   return (
     <div
       className={`cell${reasons.length > 0 ? " lethal" : ""}`}
@@ -157,7 +140,7 @@ export function Seat({ seat, game, canUndo, resetArmed, send, capture, scanLocke
       style={{ "--accent": SEAT_ACCENT[seat] }}
     >
       <div className="rotator">
-        <section className={capture ? "panel scanning" : "panel"} aria-label={`${player.name || seat} seat`}>
+        <section className="panel" aria-label={`${player.name || seat} seat`}>
           <header className="who">
             <Field
               className="seat-name"
@@ -175,56 +158,6 @@ export function Seat({ seat, game, canUndo, resetArmed, send, capture, scanLocke
             />
           </header>
 
-          {capture ? (
-            <div className="scan-panel">
-              <div className="zone-row">
-                {SCAN_ZONES.map((zone) => (
-                  <button
-                    key={zone}
-                    type="button"
-                    className={capture.zone === zone ? "on" : ""}
-                    disabled={capture.busy || capture.pending}
-                    onClick={() => capture.onZone(zone)}
-                  >
-                    {ZONE_LABEL[zone]}
-                  </button>
-                ))}
-              </div>
-              <p className="scan-note">{capture.note || "Hold the phone a hand-span up. Titles should be readable."}</p>
-              {capture.pending ? (
-                <div className="scan-actions">
-                  <button type="button" disabled={capture.busy} onClick={capture.onReplace}>
-                    Replace last
-                  </button>
-                  <button type="button" disabled={capture.busy} onClick={capture.onKeep}>
-                    Keep both
-                  </button>
-                </div>
-              ) : (
-                <div className="scan-actions">
-                  <button type="button" disabled={capture.busy} onClick={() => openCamera("add")}>
-                    {capture.busy ? "Reading…" : capture.started ? "Add photo" : "Camera"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={capture.busy || !capture.started}
-                    onClick={() => openCamera("retake")}
-                  >
-                    Retake
-                  </button>
-                </div>
-              )}
-              <input
-                ref={cameraRef}
-                className="file-clip"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={take}
-              />
-            </div>
-          ) : (
-            <>
           <div className="life">
             {reasons.length > 0 && (
               <p className="banner">
@@ -278,31 +211,18 @@ export function Seat({ seat, game, canUndo, resetArmed, send, capture, scanLocke
               </p>
             )}
           </div>
-            </>
-          )}
 
           <footer className="tools">
-            {capture ? (
-              <button type="button" disabled={capture.busy} onClick={capture.onDone}>
-                Done
-              </button>
-            ) : (
-              <>
-                <button type="button" disabled={scanLocked} onClick={onScan}>
-                  Scan
-                </button>
-                <button type="button" disabled={!canUndo} onClick={() => send({ type: "undo" })}>
-                  Undo
-                </button>
-                <button
-                  type="button"
-                  className={resetArmed ? "armed" : ""}
-                  onClick={() => send({ type: "reset" })}
-                >
-                  {resetArmed ? "Confirm" : "Reset"}
-                </button>
-              </>
-            )}
+            <button type="button" disabled={!canUndo} onClick={() => send({ type: "undo" })}>
+              Undo
+            </button>
+            <button
+              type="button"
+              className={resetArmed ? "armed" : ""}
+              onClick={() => send({ type: "reset" })}
+            >
+              {resetArmed ? "Confirm" : "Reset"}
+            </button>
           </footer>
         </section>
       </div>

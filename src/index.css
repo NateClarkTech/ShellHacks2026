@@ -257,8 +257,6 @@ input {
 
 .tools button { flex: 1; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
 
-.panel.scanning { display: flex; flex-direction: column; }
-
 .scan-panel {
   display: flex;
   flex-direction: column;
@@ -292,6 +290,17 @@ input {
 .zone-row button.on {
   border-color: #e3c27a;
   background: #1c3a2c;
+}
+
+.board-scan {
+  margin: 8px 0 0;
+  padding: 8px;
+  border: 1px solid #e3c27a;
+  border-radius: 8px;
+}
+
+.board-scan > button {
+  margin-top: 6px;
 }
 
 .tools .armed {
