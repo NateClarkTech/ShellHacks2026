@@ -33,7 +33,7 @@ test("accepting a guess keeps the seat and marks it accepted", () => {
   });
   const accepted = board.cards.find((card) => card.id === swords.id);
   assert.equal(accepted.placement, "accepted");
-  assert.equal(accepted.controller, "south");
+  assert.equal(accepted.controller, "seat4");
   assert.equal(accepted.zone, "battlefield");
 });
 
@@ -44,7 +44,7 @@ test("a dispute stays unnamed until the table accepts one candidate", () => {
     type: "apply",
     id: dispute.id,
     name: "",
-    controller: "south",
+    controller: "seat4",
     zone: "stack",
   });
   assert.equal(skipped, board);
@@ -52,13 +52,13 @@ test("a dispute stays unnamed until the table accepts one candidate", () => {
     type: "apply",
     id: dispute.id,
     name: "Wrath of God",
-    controller: "north",
+    controller: "seat2",
     zone: "stack",
   });
   const named = board.cards.find((card) => card.id === dispute.id);
   assert.equal(named.name, "Wrath of God");
   assert.equal(named.identity, "chosen");
-  assert.equal(named.controller, "north");
+  assert.equal(named.controller, "seat2");
   assert.equal(named.placement, "accepted");
   assert.equal(named.zone, "stack");
 });
@@ -71,14 +71,14 @@ test("moving a card onto the stack puts it on top, and resolve is an accepted zo
     type: "apply",
     id: wrath.id,
     name: "Wrath of God",
-    controller: "south",
+    controller: "seat4",
     zone: "stack",
   });
   board = reduceBoard(board, {
     type: "apply",
     id: swords.id,
     name: swords.name,
-    controller: "south",
+    controller: "seat4",
     zone: "stack",
   });
   const stack = board.cards
@@ -92,7 +92,7 @@ test("moving a card onto the stack puts it on top, and resolve is an accepted zo
     type: "apply",
     id: swords.id,
     name: swords.name,
-    controller: "south",
+    controller: "seat4",
     zone: "graveyard",
   });
   const resolved = board.cards.find((card) => card.id === swords.id);
@@ -108,7 +108,7 @@ test("stack order can move and undo restores the previous zone", () => {
     type: "apply",
     id: swords.id,
     name: swords.name,
-    controller: "east",
+    controller: "seat3",
     zone: "exile",
   });
   assert.equal(board.cards.find((card) => card.id === swords.id).zone, "exile");
@@ -124,13 +124,13 @@ test("rotating the photo re-guesses only cards the table has not accepted", () =
     type: "apply",
     id: swords.id,
     name: swords.name,
-    controller: "south",
+    controller: "seat4",
     zone: "battlefield",
   });
   board = reduceBoard(board, { type: "rotate", direction: 1, commanders: {} });
   board = reduceBoard(board, { type: "rotate", direction: 1, commanders: {} });
   const kept = board.cards.find((card) => card.id === swords.id);
-  assert.equal(kept.controller, "south");
+  assert.equal(kept.controller, "seat4");
   assert.equal(kept.placement, "accepted");
   const wrath = board.cards.find((card) => card.zone !== "battlefield" || card.id !== swords.id);
   assert.equal(board.orientation, 2);
@@ -145,14 +145,14 @@ test("toward the top moves a stack card above the one that was on top", () => {
     type: "apply",
     id: wrath.id,
     name: "Wrath of God",
-    controller: "south",
+    controller: "seat4",
     zone: "stack",
   });
   board = reduceBoard(board, {
     type: "apply",
     id: swords.id,
     name: swords.name,
-    controller: "south",
+    controller: "seat4",
     zone: "stack",
   });
   board = reduceBoard(board, { type: "stack-move", id: wrath.id, direction: 1 });
@@ -190,11 +190,11 @@ test("a seat scan appends, and a retake drops only that photo", () => {
       cardsight: [],
       ocr: [{ name: "Forest", confidence: 1, box: { cx: 0.2, cy: 0.2 } }],
     },
-    { controller: "north", zone: "battlefield" },
+    { controller: "seat2", zone: "battlefield" },
   );
-  assert.equal(board.cards.find((card) => card.id === south.id).controller, "south");
+  assert.equal(board.cards.find((card) => card.id === south.id).controller, "seat4");
   const forest = board.cards.find((card) => card.name === "Forest");
-  assert.equal(forest.controller, "north");
+  assert.equal(forest.controller, "seat2");
   assert.equal(forest.zone, "battlefield");
   assert.equal(forest.photoId, "north-1");
   board = appendScan(
@@ -204,7 +204,7 @@ test("a seat scan appends, and a retake drops only that photo", () => {
       cardsight: [],
       ocr: [{ name: "Island", confidence: 1, box: { cx: 0.3, cy: 0.3 } }],
     },
-    { controller: "north", zone: "graveyard", mode: "retake", replacePhotoId: "north-1" },
+    { controller: "seat2", zone: "graveyard", mode: "retake", replacePhotoId: "north-1" },
   );
   assert.equal(board.cards.some((card) => card.photoId === "north-1"), false);
   assert.equal(board.cards.some((card) => card.name === "Island"), true);
@@ -222,7 +222,7 @@ test("confirming a token takes it off the confirm list", () => {
       cardsight: [],
       ocr: [{ name: "Rat", confidence: 1, box: { cx: 0.2, cy: 0.2 } }],
     },
-    { controller: "west", zone: "battlefield" },
+    { controller: "seat1", zone: "battlefield" },
   );
   const rat = board.cards.find((card) => card.name === "Rat");
   assert.equal(rat.identity, "confirm");
@@ -240,11 +240,11 @@ test("add and remove", () => {
   let board = reduceBoard(scan(), {
     type: "add",
     name: "Rhystic Study",
-    controller: "west",
+    controller: "seat1",
     zone: "battlefield",
   });
   const added = board.cards.find((card) => card.name === "Rhystic Study");
-  assert.equal(added.controller, "west");
+  assert.equal(added.controller, "seat1");
   assert.equal(added.placement, "accepted");
   assert.equal(added.identity, "manual");
   board = reduceBoard(board, { type: "remove", id: added.id });

@@ -1,8 +1,8 @@
 # Commander table
 
-A phone in the middle of a Commander pod. Four quadrants, one per seat. South reads upright, north is rotated 180°, and east and west face the side edges.
+A phone in the middle of a Commander pod, held in portrait. Two players sit on the left edge and two on the right. The corners are Seat 1 through Seat 4, clockwise from the top-left. Tap the player who goes first. That order is marked 1st through 4th, clockwise from them.
 
-Each seat has life (start at 40), poison, and the commander damage that seat's commander has dealt to the other three. The rows under "Dealt to" are that damage. "From" lists damage coming in. A seat is marked at 0 life, 10 poison, or 21 commander damage from one opponent. Damage from two commanders is not added together. Hold a button to keep counting. Undo steps back one change. Reset asks for a second tap. After the first tap, the screen stays awake while the page is open.
+Each seat shows a name, a commander, and a life total. Tap the life total to type it. Poison and commander damage are behind Counters. A seat is marked at 0 life, 10 poison, or 21 commander damage from one opponent. Hold +1 or −1 to keep counting. Reset asks for a confirm in the center of the screen. After the first tap, the screen stays awake while the page is open.
 
 The table is saved in this browser. The ruling slip is not in this build.
 

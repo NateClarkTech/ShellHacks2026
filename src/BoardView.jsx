@@ -1,12 +1,12 @@
 import { useRef, useState } from "react";
-import { SEATS } from "./game.js";
+import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { sameCard } from "./vision.js";
 
-const SEAT_ORDER = ["south", "north", "west", "east"];
 const ZONE_ORDER = ["command", "battlefield", "graveyard", "exile", "library", "hand"];
 const SCAN_ZONES = ["battlefield", "graveyard", "exile", "command"];
-const EDGE = ["South", "West", "North", "East"];
+// Each photo turn moves the bottom edge clockwise: seat 4, seat 1, seat 2, seat 3.
+const BOTTOM_EDGE = ["seat4", "seat1", "seat2", "seat3"];
 
 function sourceLabel(sources) {
   const parts = [];
@@ -16,8 +16,12 @@ function sourceLabel(sources) {
   return parts.join(" · ");
 }
 
+function playerName(seat, seatNames) {
+  return seatNames[seat] || seatOrderName(seat);
+}
+
 function rowMeta(card, seatNames) {
-  const who = card.controller ? seatNames[card.controller] || card.controller : "No seat";
+  const who = card.controller ? playerName(card.controller, seatNames) : "No seat";
   const kind =
     card.identity === "confirm"
       ? "Confirm"
@@ -93,7 +97,7 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
             className={draft.controller === seat ? "on" : ""}
             onClick={() => setDraft((current) => ({ ...current, controller: seat }))}
           >
-            {seatNames[seat] || seat}
+            {playerName(seat, seatNames)}
           </button>
         ))}
       </div>
@@ -162,7 +166,7 @@ function ScanWizard({ scan, seatNames }) {
     if (file) scan.onCapture(file, modeRef.current);
   }
 
-  const who = seatNames[scan.seat] || scan.seat;
+  const who = scan.seat ? playerName(scan.seat, seatNames) : "";
   const where = ZONE_LABEL[scan.zone];
 
   return (
@@ -171,9 +175,9 @@ function ScanWizard({ scan, seatNames }) {
         <>
           <p className="scan-note">Which player is this photo of?</p>
           <div className="choice-row">
-            {SEAT_ORDER.map((seat) => (
+            {SEATS.map((seat) => (
               <button key={seat} type="button" disabled={scan.busy} onClick={() => scan.onSeat(seat)}>
-                {seatNames[seat] || seat}
+                {playerName(seat, seatNames)}
               </button>
             ))}
           </div>
@@ -277,7 +281,7 @@ export function BoardView({
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [adding, setAdding] = useState("");
-  const [addSeat, setAddSeat] = useState("south");
+  const [addSeat, setAddSeat] = useState(SEATS[0]);
 
   function open(card, nextDraft) {
     setSelectedId(card.id);
@@ -293,7 +297,7 @@ export function BoardView({
     .filter((card) => card.zone === "stack")
     .sort((a, b) => b.stackIndex - a.stackIndex);
   const loose = placed.filter((card) => card.zone !== "stack" && !card.controller);
-  const seats = SEAT_ORDER.map((seat) => ({
+  const seats = SEATS.map((seat) => ({
     seat,
     zones: ZONE_ORDER.map((zone) => ({
       zone,
@@ -336,10 +340,10 @@ export function BoardView({
             {scanning ? "Reading…" : "Staged"}
           </button>
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
-            Face {EDGE[facing]}
+            Face {playerName(BOTTOM_EDGE[facing], seatNames)}
           </button>
           <button type="button" onClick={() => onRotatePhoto(1)}>
-            Bottom edge: {EDGE[board.orientation]}
+            Bottom edge: {playerName(BOTTOM_EDGE[board.orientation], seatNames)}
           </button>
         </div>
         <button type="button" disabled={board.past.length === 0} onClick={() => send({ type: "undo" })}>
@@ -395,7 +399,7 @@ export function BoardView({
           )}
           {seats.map((group) => (
             <section key={group.seat} className="board-section">
-              <h2>{seatNames[group.seat] || group.seat}</h2>
+              <h2>{playerName(group.seat, seatNames)}</h2>
               {group.zones.map((zoneGroup) => (
                 <div key={zoneGroup.zone}>
                   <h3>{ZONE_LABEL[zoneGroup.zone]}</h3>
@@ -435,7 +439,7 @@ export function BoardView({
                   className={addSeat === seat ? "on" : ""}
                   onClick={() => setAddSeat(seat)}
                 >
-                  {seatNames[seat] || seat}
+                  {playerName(seat, seatNames)}
                 </button>
               ))}
               <button type="submit">Add</button>

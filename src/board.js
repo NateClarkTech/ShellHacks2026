@@ -1,4 +1,4 @@
-import { SEATS } from "./game.js";
+import { SEATS, seatId } from "./game.js";
 import { ZONES, assembleScan, placementFor } from "./vision.js";
 
 const STORAGE_KEY = "commander-board-v1";
@@ -173,7 +173,7 @@ export function reduceBoard(state, action) {
       const name = cleanName(action.name);
       if (!name) return state;
       const zone = ZONES.includes(action.zone) ? action.zone : "battlefield";
-      const controller = SEATS.includes(action.controller) ? action.controller : "south";
+      const controller = SEATS.includes(action.controller) ? action.controller : SEATS[0];
       const card = {
         id: action.id || nextId(state.cards),
         name,
@@ -224,11 +224,25 @@ function cardOk(card) {
   return Boolean(card) && typeof card.id === "string" && ZONES.includes(card.zone);
 }
 
+function migrateCard(card) {
+  const controller = seatId(card?.controller);
+  return controller === card?.controller ? card : { ...card, controller };
+}
+
+function migrateBoard(board) {
+  if (!board || typeof board !== "object") return board;
+  const { past, ...rest } = board;
+  const next = { ...rest };
+  if (Array.isArray(rest.cards)) next.cards = rest.cards.map(migrateCard);
+  if (Array.isArray(past)) next.past = past.map((entry) => migrateBoard(entry));
+  return next;
+}
+
 export function loadBoard() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyBoard();
-    const parsed = JSON.parse(raw);
+    const parsed = migrateBoard(JSON.parse(raw));
     if (!Array.isArray(parsed?.cards) || !parsed.cards.every(cardOk)) return emptyBoard();
     return {
       cards: parsed.cards,

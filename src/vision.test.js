@@ -93,44 +93,44 @@ test("position guesses seat, zone, and the stack", () => {
     command: placementFor(
       { name: "Atraxa, Praetors' Voice", box: { cx: 0.52, cy: 0.96 } },
       0,
-      { south: "Atraxa, Praetors' Voice" },
+      { seat4: "Atraxa, Praetors' Voice" },
     ),
     stack: placementFor({ name: "Wrath", box: { cx: 0.5, cy: 0.5 } }),
-    north: placementFor({ name: "Humility", box: { cx: 0.55, cy: 0.22 } }),
+    seat2: placementFor({ name: "Humility", box: { cx: 0.55, cy: 0.22 } }),
     unplaced: placementFor({ name: "Rest in Peace", box: null }),
   };
   assert.equal(board.battlefield.zone, "battlefield");
-  assert.equal(board.battlefield.controller, "south");
+  assert.equal(board.battlefield.controller, "seat4");
   assert.equal(board.graveyard.zone, "graveyard");
-  assert.equal(board.graveyard.controller, "east");
+  assert.equal(board.graveyard.controller, "seat3");
   assert.equal(board.exile.zone, "exile");
-  assert.equal(board.exile.controller, "east");
+  assert.equal(board.exile.controller, "seat3");
   assert.equal(board.library.zone, "library");
-  assert.equal(board.library.controller, "south");
+  assert.equal(board.library.controller, "seat4");
   assert.equal(board.command.zone, "command");
   assert.equal(board.stack.zone, "stack");
   assert.equal(board.stack.controller, null);
-  assert.equal(board.north.controller, "north");
-  assert.equal(board.north.zone, "battlefield");
+  assert.equal(board.seat2.controller, "seat2");
+  assert.equal(board.seat2.zone, "battlefield");
   assert.equal(board.unplaced.controller, null);
   assert.match(board.unplaced.reason, /No position/);
 });
 
-test("turning the photo a half turn sends the bottom edge to north", () => {
+test("turning the photo a half turn sends the bottom edge to seat 2", () => {
   const card = { name: "Birds", box: { cx: 0.45, cy: 0.75 } };
-  assert.equal(placementFor(card, 0).controller, "south");
-  assert.equal(placementFor(card, 2).controller, "north");
+  assert.equal(placementFor(card, 0).controller, "seat4");
+  assert.equal(placementFor(card, 2).controller, "seat2");
 });
 
 test("the staged scan is a full board with an agreement, a dispute, and a stack", () => {
   const payload = JSON.parse(
     readFileSync(new URL("../public/staged-scan.json", import.meta.url), "utf8"),
   );
-  const cards = assembleScan(payload, { commanders: { south: "Atraxa, Praetors' Voice" } });
+  const cards = assembleScan(payload, { commanders: { seat4: "Atraxa, Praetors' Voice" } });
   const byName = Object.fromEntries(cards.filter((card) => card.name).map((card) => [card.name, card]));
   assert.equal(byName["Swords to Plowshares"].identity, "agreed");
-  assert.equal(byName["Swords to Plowshares"].controller, "south");
-  assert.equal(byName["Humility"].controller, "north");
+  assert.equal(byName["Swords to Plowshares"].controller, "seat4");
+  assert.equal(byName["Humility"].controller, "seat2");
   assert.equal(byName["Sol Ring"].identity, "guess");
   assert.equal(byName["Sol Ring"].zone, "battlefield");
   assert.equal(byName["Eternal Witness"].zone, "graveyard");
@@ -169,11 +169,11 @@ test("a seat scan pins the seat and zone, and a token still asks", () => {
         { name: "Squirrel", confidence: 1, box: { cx: 0.8, cy: 0.2 } },
       ],
     },
-    { controller: "north", zone: "graveyard", photoId: "p1" },
+    { controller: "seat2", zone: "graveyard", photoId: "p1" },
   );
   assert.equal(cards.length, 2);
   for (const card of cards) {
-    assert.equal(card.controller, "north");
+    assert.equal(card.controller, "seat2");
     assert.equal(card.zone, "graveyard");
     assert.equal(card.placement, "accepted");
     assert.equal(card.photoId, "p1");

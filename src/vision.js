@@ -1,3 +1,5 @@
+import { SEATS, seatId, seatOrderName } from "./game.js";
+
 // CardSight names a card and does not return a box. The title scan (Azure Read
 // plus a name list, the useful half of mtgscan) returns boxes. A slot is one
 // title-scan box, or a CardSight name that matched no box.
@@ -10,7 +12,6 @@ export const GUESS_AT = 0.75;
 
 export const ZONES = ["battlefield", "graveyard", "exile", "command", "library", "hand", "stack"];
 
-const SEAT_IDS = ["south", "north", "east", "west"];
 const PIN_ZONES = ["battlefield", "graveyard", "exile", "command"];
 
 // Keep this in step with EXACT_NAMES tokens in server/vision/names.py.
@@ -309,21 +310,17 @@ export function turnPoint(cx, cy, turns) {
 // Local axes: +x is that seat's right, +y is toward that seat and away from center.
 function localAxes(seat, dx, dy) {
   switch (seat) {
-    case "south":
+    case "seat4":
       return { x: dx, y: dy };
-    case "north":
+    case "seat2":
       return { x: -dx, y: -dy };
-    case "east":
+    case "seat3":
       return { x: dy, y: dx };
-    case "west":
+    case "seat1":
       return { x: -dy, y: -dx };
     default:
       return { x: 0, y: 0 };
   }
-}
-
-function seatLabel(seat) {
-  return seat.charAt(0).toUpperCase() + seat.slice(1);
 }
 
 export function placementFor(card, orientation = 0, commanders = {}) {
@@ -347,9 +344,9 @@ export function placementFor(card, orientation = 0, commanders = {}) {
     };
   }
   const controller =
-    Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "east" : "west") : dy > 0 ? "south" : "north";
+    Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "seat3" : "seat1") : dy > 0 ? "seat4" : "seat2";
   const local = localAxes(controller, dx, dy);
-  const label = seatLabel(controller);
+  const label = seatOrderName(controller);
   const commander = commanders?.[controller];
   if (
     commander &&
@@ -412,7 +409,8 @@ export function assembleScan(
   { orientation = 0, commanders = {}, controller = null, zone = null, photoId = null } = {},
 ) {
   const slots = vote(payload?.cardsight, payload?.ocr);
-  const pinned = SEAT_IDS.includes(controller);
+  const controllerId = SEATS.includes(seatId(controller)) ? seatId(controller) : null;
+  const pinned = Boolean(controllerId);
   const pinnedZone = PIN_ZONES.includes(zone) ? zone : "battlefield";
   const cards = slots.map((slot, index) => {
     let identity = slot.identity;
@@ -437,7 +435,7 @@ export function assembleScan(
     if (pinned) {
       return {
         ...card,
-        controller,
+        controller: controllerId,
         zone: pinnedZone,
         placement: "accepted",
         reason: "Scanned from this seat.",
