@@ -499,16 +499,15 @@ export function BoardView({
   return (
     <section className="board-sheet" aria-label="Board">
       <header className="board-bar">
-        <strong>Board</strong>
-        <button
-          type="button"
-          className={clarifyOn ? "on" : ""}
-          aria-pressed={clarifyOn}
-          onClick={onClarifyToggle}
-        >
-          Clarify
-        </button>
-        <div className="board-tools">
+        <div className="board-actions">
+          <button
+            type="button"
+            className={clarifyOn ? "on" : ""}
+            aria-pressed={clarifyOn}
+            onClick={onClarifyToggle}
+          >
+            Clarify
+          </button>
           <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={scan?.onStart}>
             Scan
           </button>
@@ -516,15 +515,16 @@ export function BoardView({
             {scanning ? "Reading…" : "Staged"}
           </button>
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
-            Face {playerName(BOTTOM_EDGE[facing], seatNames)}
+            Face
+            <span className="board-action-sub">{playerName(BOTTOM_EDGE[facing], seatNames)}</span>
+          </button>
+          <button type="button" disabled={board.past.length === 0} onClick={() => send({ type: "undo" })}>
+            Undo
+          </button>
+          <button type="button" onClick={onClose}>
+            Close
           </button>
         </div>
-        <button type="button" className="board-end" disabled={board.past.length === 0} onClick={() => send({ type: "undo" })}>
-          Undo
-        </button>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
       </header>
       {(error || board.warnings.length > 0) && (
         <p className="board-warn">{error || board.warnings.join(" ")}</p>
