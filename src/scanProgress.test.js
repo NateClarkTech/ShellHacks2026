@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  READ_SECONDS,
   noteScanProgress,
+  openingSeconds,
+  readFill,
   readScanEvents,
   readingProgress,
   scanTimeLabel,
+  scanView,
   secondsLeft,
   sightSeconds,
 } from "./scanProgress.js";
@@ -30,6 +34,44 @@ test("a clock behind the progress stamp does not push the bar backward", () => {
   const progress = { seconds: 2.5, budget: 2.5, at: 1000, done: 0, total: 8 };
   assert.equal(secondsLeft(progress, 900), 2.5);
   assert.equal(secondsLeft(progress, 3500), 0);
+});
+
+test("the bar starts empty and the time is already on the screen", () => {
+  const start = readingProgress(0);
+  const opened = scanView(start, 0);
+  assert.equal(opened.fraction, 0);
+  assert.equal(opened.label, scanTimeLabel(openingSeconds(0)));
+  assert.match(opened.label, /^About \d+ seconds left$/);
+
+  const midway = scanView(start, READ_SECONDS * 500);
+  assert.ok(midway.fraction > opened.fraction);
+  assert.ok(midway.fraction < 0.62);
+  assert.ok(openingSeconds(READ_SECONDS / 2) < openingSeconds(0));
+});
+
+test("CardSight continues the bar instead of starting it over", () => {
+  const reading = readingProgress(0);
+  const before = readFill(2);
+  const started = noteScanProgress(
+    reading,
+    { done: 0, total: 4, seconds: 1.25, budget: 1.25 },
+    2000,
+  );
+  assert.equal(started.readFraction, before);
+  const view = scanView(started, 2000);
+  assert.equal(view.fraction, before);
+  assert.equal(view.label, "About 2 seconds left");
+  const later = scanView(started, 2625);
+  assert.ok(later.fraction > view.fraction);
+  assert.ok(later.fraction < 1);
+  assert.equal(scanView(started, 4000).fraction, 1);
+});
+
+test("a scan with nothing left for CardSight fills the bar", () => {
+  const started = noteScanProgress(readingProgress(0), { done: 0, total: 0, seconds: 0, budget: 0 }, 500);
+  const view = scanView(started, 500);
+  assert.equal(view.fraction, 1);
+  assert.equal(view.label, "Finishing…");
 });
 
 test("the countdown keeps its start when later cards finish", () => {

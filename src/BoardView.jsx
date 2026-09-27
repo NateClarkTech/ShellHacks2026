@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ClarifyPanel } from "./ClarifyPanel.jsx";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
-import { scanTimeLabel, secondsLeft } from "./scanProgress.js";
+import { scanView } from "./scanProgress.js";
 import { sameCard } from "./vision.js";
 
 const ZONE_ORDER = ["command", "battlefield", "graveyard", "exile", "library", "hand"];
@@ -247,27 +247,21 @@ function ScanMeter({ progress }) {
     const id = setInterval(() => setNow(performance.now()), 100);
     return () => clearInterval(id);
   }, []);
-  const left = secondsLeft(progress, now);
-  const budget = progress?.budget;
-  const indeterminate = left == null;
-  let pct = 0;
-  if (!indeterminate) {
-    pct = budget > 0 ? Math.max(0, Math.min(100, ((budget - left) / budget) * 100)) : 100;
-  }
-  const label = scanTimeLabel(left);
+  const view = scanView(progress, now);
+  const pct = Math.round(view.fraction * 100);
   return (
     <div className="scan-meter">
       <div
-        className={indeterminate ? "scan-meter-track wait" : "scan-meter-track"}
+        className="scan-meter-track"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={indeterminate ? undefined : Math.round(pct)}
+        aria-valuenow={pct}
         aria-label="Scan progress"
       >
-        <div className="scan-meter-fill" style={indeterminate ? undefined : { width: `${pct}%` }} />
+        <div className="scan-meter-fill" style={{ width: `${pct}%` }} />
       </div>
-      <p className="scan-meter-time">{label}</p>
+      <p className="scan-meter-time">{view.label}</p>
     </div>
   );
 }
