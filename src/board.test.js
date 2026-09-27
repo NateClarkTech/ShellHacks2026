@@ -35,6 +35,35 @@ test("accepting a guess keeps the seat and marks it accepted", () => {
   assert.equal(accepted.placement, "accepted");
   assert.equal(accepted.controller, "seat4");
   assert.equal(accepted.zone, "battlefield");
+  board = reduceBoard(board, {
+    type: "apply",
+    id: swords.id,
+    name: "Rat",
+    detail: "Token · 1/1 · B · Deathtouch",
+    controller: swords.controller,
+    zone: swords.zone,
+  });
+  const rat = board.cards.find((card) => card.id === swords.id);
+  assert.equal(rat.name, "Rat");
+  assert.equal(rat.detail, "Token · 1/1 · B · Deathtouch");
+});
+
+test("accepting a name drops the uncertain prompt", () => {
+  let board = boardFromScan({
+    cardsight: [],
+    ocr: [{ name: null, confidence: 0, note: "The read was uncertain. Pick the card.", box: { cx: 0.2, cy: 0.2 } }],
+  });
+  const card = board.cards[0];
+  assert.match(card.note, /uncertain/);
+  board = reduceBoard(board, {
+    type: "apply",
+    id: card.id,
+    name: "Sol Ring",
+    controller: card.controller,
+    zone: "battlefield",
+  });
+  assert.equal(board.cards[0].name, "Sol Ring");
+  assert.equal(board.cards[0].note, "");
 });
 
 test("a dispute stays unnamed until the table accepts one candidate", () => {

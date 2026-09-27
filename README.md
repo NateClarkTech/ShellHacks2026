@@ -10,15 +10,14 @@ The table is saved in this browser. The ruling slip is not in this build.
 
 Open the board and tap Scan. Pick the player, then the zone. Battlefield, Graveyard, Exile, and Command are the choices. Hold the phone about a hand-span up and add another photo if the board does not fit. The laptop finds the cards locally, sends Azure one image of title strips, and calls CardSight only for the titles it could not read. A name both readers share is accepted. A name only one reader is confident about is a guess. A token asks for one tap. If the readers disagree, pick the card. The staged board is still the overhead sample, and on that sample seat, zone, and stack order are guesses until Accept. The stack lists the top first. Resolve drafts a graveyard for that spell and still waits for Accept.
 
-Staged loads a cached scan with no keys and no network. A live photo needs the API process, with `CARDSIGHT_API_KEY`, `AZURE_VISION_KEY`, and `AZURE_VISION_ENDPOINT` on the laptop. The phone only talks to this page.
+Staged loads a cached scan with no keys and no network. A live photo uses the API on this laptop. Put `CARDSIGHT_API_KEY`, `AZURE_VISION_KEY`, and `AZURE_VISION_ENDPOINT` in `.env.local`. The phone only talks to this page.
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r server/requirements.txt
-.venv/bin/uvicorn server.app:app --host 127.0.0.1 --port 8000
 ```
 
-Run that beside `npm run dev`. The dev server proxies `/api` to port 8000. The first title scan downloads the Scryfall card-name catalog into `server/data/`.
+`npm run dev` loads `.env.local`, starts the API on port 8000, and starts the page. The page proxies `/api` to that port. Stop the page and the API stops with it. The first title scan downloads the Scryfall card-name catalog into `server/data/`.
 
 ```bash
 npm install

@@ -146,6 +146,15 @@ function cleanName(name) {
   return String(name ?? "").trim().slice(0, 80);
 }
 
+function cleanDetail(detail) {
+  return String(detail ?? "").trim().slice(0, 160);
+}
+
+const PICK_NOTES = new Set([
+  "The read was uncertain. Pick the card.",
+  "The two readers disagree. Pick the card.",
+]);
+
 export function reduceBoard(state, action) {
   switch (action.type) {
     case "apply": {
@@ -156,6 +165,7 @@ export function reduceBoard(state, action) {
       const zone = ZONES.includes(action.zone) ? action.zone : card.zone;
       const controller = SEATS.includes(action.controller) ? action.controller : null;
       const nameChanged = name !== card.name;
+      const detail = action.detail == null ? card.detail ?? "" : cleanDetail(action.detail);
       const stayingOnStack = card.zone === "stack" && zone === "stack";
       const cards = restack(
         state.cards.map((item) =>
@@ -164,6 +174,9 @@ export function reduceBoard(state, action) {
             : {
                 ...item,
                 name,
+                detail,
+                note: PICK_NOTES.has(item.note) ? "" : item.note,
+                tapped: action.tapped == null ? Boolean(item.tapped) : Boolean(action.tapped),
                 identity: nameChanged || item.identity === "confirm" ? "chosen" : item.identity,
                 controller,
                 zone,
@@ -216,6 +229,7 @@ export function reduceBoard(state, action) {
         placement: "accepted",
         note: "Added by name.",
         reason: "Added by name.",
+        detail: cleanDetail(action.detail),
       };
       return withHistory(state, { ...state, cards: restack([...state.cards, card]) });
     }

@@ -4,6 +4,7 @@ import { Seat } from "./Seat.jsx";
 import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
 import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
 import { emptyFocus } from "./schema/gs.v1.js";
+import { noteScanProgress, readScanEvents, readingProgress } from "./scanProgress.js";
 import { sampleById } from "./session/fixtures.js";
 import { selectToggle, sessionFromFixture, sessionFromTable } from "./session/session.js";
 import { assembleScan, duplicateShare } from "./vision.js";
@@ -24,6 +25,7 @@ export default function App() {
   const [board, setBoard] = useState(() => loadBoard());
   const [boardOpen, setBoardOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(null);
   const [scanError, setScanError] = useState("");
   const [scanStep, setScanStep] = useState(null);
   const [scanSeat, setScanSeat] = useState(null);
@@ -155,7 +157,8 @@ export default function App() {
     if (!scanSeat || !scanZone || !file) return;
     setScanning(true);
     setScanError("");
-    setScanNote("Reading…");
+    setScanNote("");
+    setScanProgress(readingProgress());
     setPendingDup(null);
     try {
       const body = new FormData();
@@ -164,12 +167,22 @@ export default function App() {
       body.append("zone", scanZone);
       body.append("session", sessionId);
       body.append("mode", mode);
-      const response = await fetch("/api/scan", { method: "POST", body });
-      const payload = await response.json().catch(() => null);
+      const response = await fetch("/api/scan", {
+        method: "POST",
+        body,
+        headers: { Accept: "application/x-ndjson" },
+      });
+      const type = response.headers.get("content-type") || "";
       if (!response.ok) {
-        const detail = payload?.detail;
+        const failure = await response.json().catch(() => null);
+        const detail = failure?.detail;
         throw new Error(typeof detail === "string" ? detail : "The scan did not finish.");
       }
+      const payload = type.includes("application/x-ndjson")
+        ? await readScanEvents(response, (event) => {
+            setScanProgress((current) => noteScanProgress(current, event, performance.now()));
+          })
+        : await response.json();
       if (payload.replayed) {
         setScanNote("That photo was already added.");
         return;
@@ -209,11 +222,13 @@ export default function App() {
       setScanError(message);
     } finally {
       setScanning(false);
+      setScanProgress(null);
     }
   }
 
   async function loadStaged() {
     setScanning(true);
+    setScanProgress(readingProgress());
     setScanError("");
     setBoardOpen(true);
     try {
@@ -226,6 +241,7 @@ export default function App() {
       setScanError(scanMessage(error));
     } finally {
       setScanning(false);
+      setScanProgress(null);
     }
   }
 
@@ -290,6 +306,7 @@ export default function App() {
               zone: scanZone,
               note: scanNote,
               busy: scanning,
+              progress: scanProgress,
               started: Boolean(scanSeat && scanZone && lastPhotoId(board, scanSeat, scanZone)),
               added: scanStarted,
               pending: Boolean(pendingDup),

@@ -10,7 +10,7 @@ import cv2
 import httpx
 import numpy as np
 
-from server.vision.cardsight import parse_cardsight
+from server.vision.cardsight import SIGHT_LIMITER, parse_cardsight, sight_seconds
 from server.vision.detect import detect_cards, orient_warp
 from server.vision.images import prepare_image
 from server.vision.mosaic import choose_ends, pack_strips
@@ -90,6 +90,7 @@ async def identify_magic(image: bytes) -> tuple[list[dict], str | None]:
     key = os.environ.get("CARDSIGHT_API_KEY")
     if not key:
         return [], "CardSight key is not set."
+    await SIGHT_LIMITER.acquire()
     try:
         async with httpx.AsyncClient(timeout=45) as client:
             response = await client.post(
@@ -138,10 +139,18 @@ async def run_scan(
     zone: str | None = None,
     session: str | None = None,
     mode: str = "add",
+    on_progress=None,
 ) -> dict:
     del content_type
     if controller:
-        return await scan_seat(image_bytes, controller, zone, session, mode)
+        return await scan_seat(
+            image_bytes,
+            controller,
+            zone,
+            session,
+            mode,
+            on_progress=on_progress,
+        )
     try:
         prepared = prepare_image(image_bytes)
     except ValueError:
@@ -176,6 +185,10 @@ def _crop_image(crop: dict, pick: tuple[str, dict] | None) -> str:
     return "data:image/jpeg;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
 
 
+def _pose(crop: dict) -> dict:
+    return {"tapped": bool(crop.get("tapped")), "stacked": bool(crop.get("stacked"))}
+
+
 def _blank(crop: dict, note: str, image: str) -> dict:
     return {
         "name": None,
@@ -187,12 +200,29 @@ def _blank(crop: dict, note: str, image: str) -> dict:
     }
 
 
+async def _report_sight(on_progress, *, done: int, total: int, started: float) -> None:
+    if on_progress is None:
+        return
+    budget = sight_seconds(total)
+    remaining = max(0.0, budget - (time.monotonic() - started))
+    await on_progress(
+        {
+            "event": "progress",
+            "done": done,
+            "total": total,
+            "seconds": round(remaining, 3),
+            "budget": budget,
+        }
+    )
+
+
 async def scan_seat(
     image_bytes: bytes,
     controller: str,
     zone: str | None,
     session: str | None,
     mode: str,
+    on_progress=None,
 ) -> dict:
     del controller, zone, mode
     photo_id = str(uuid.uuid4())
@@ -263,7 +293,7 @@ async def scan_seat(
         pick = chosen.get(index)
         observation = pick[1] if pick else None
         if observation is not None:
-            ocr.append({**observation, "image": views[index]})
+            ocr.append({**observation, "image": views[index], **_pose(crops[index])})
             # An exact basic or token is 1.0, so it never spends a CardSight call.
             if observation["confidence"] >= GUESS_AT:
                 continue
@@ -272,9 +302,25 @@ async def scan_seat(
         warnings.append("Some cards were too shiny. Retake those.")
         sight_indexes = sight_indexes[:SIGHT_CAP]
 
-    sight_rows = await asyncio.gather(
-        *(_one_sight(index, crops[index], chosen.get(index)) for index in sight_indexes)
-    )
+    started = time.monotonic()
+    total = len(sight_indexes)
+    done = 0
+    progress_lock = asyncio.Lock()
+
+    async def report() -> None:
+        await _report_sight(on_progress, done=done, total=total, started=started)
+
+    await report()
+
+    async def paced(index: int):
+        nonlocal done
+        row = await _one_sight(index, crops[index], chosen.get(index))
+        async with progress_lock:
+            done += 1
+            await report()
+        return row
+
+    sight_rows = await asyncio.gather(*(paced(index) for index in sight_indexes))
     cardsight = []
     covered: set[int] = set()
     seen_warning = set(warnings)
@@ -283,13 +329,13 @@ async def scan_seat(
             warnings.append(warning)
             seen_warning.add(warning)
         if detection is not None:
-            cardsight.append({**detection, "image": views[index]})
+            cardsight.append({**detection, "image": views[index], **_pose(crops[index])})
             covered.add(index)
     for index, crop in enumerate(crops):
         if chosen.get(index) or index in covered:
             continue
         note = "Glare. Retake this photo." if crop["glare"] else "The title could not be read."
-        ocr.append(_blank(crop, note, views[index]))
+        ocr.append({**_blank(crop, note, views[index]), **_pose(crop)})
 
     result = _seat_result(warnings, ocr=ocr, cardsight=cardsight, scene="close", photo_id=photo_id)
     result["glare"] = sum(1 for crop in crops if crop["glare"])

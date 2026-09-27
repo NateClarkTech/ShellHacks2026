@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClarifyPanel } from "./ClarifyPanel.jsx";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
+import { scanTimeLabel, secondsLeft } from "./scanProgress.js";
 import { sameCard } from "./vision.js";
 
 const ZONE_ORDER = ["command", "battlefield", "graveyard", "exile", "library", "hand"];
@@ -33,14 +34,81 @@ function rowMeta(card, seatNames) {
           : card.placement === "accepted"
             ? "Accepted"
             : "Guess";
-  return `${kind} · ${who} · ${ZONE_LABEL[card.zone]}`;
+  const pose = [card.tapped ? "Tapped" : "", card.stacked ? "Stacked" : ""].filter(Boolean);
+  return [kind, who, ZONE_LABEL[card.zone], ...pose].join(" · ");
+}
+
+function NameField({ label, value, onChange, placeholder, ariaLabel }) {
+  const [open, setOpen] = useState(false);
+  const [options, setOptions] = useState([]);
+  const request = useRef(0);
+
+  useEffect(() => {
+    const query = value.trim();
+    if (query.length < 2) return undefined;
+    const id = request.current + 1;
+    request.current = id;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return;
+        const body = await response.json();
+        if (request.current === id) setOptions(Array.isArray(body.suggestions) ? body.suggestions : []);
+      } catch {
+        if (request.current === id) setOptions([]);
+      }
+    }, 160);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  function choose(option) {
+    onChange({ name: option.name, detail: option.detail || "" });
+    setOpen(false);
+  }
+
+  return (
+    <div className="card-name-field">
+      {label && <span>{label}</span>}
+      <input
+        aria-label={ariaLabel || label || "Card name"}
+        placeholder={placeholder}
+        value={value}
+        maxLength={80}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onChange={(event) => {
+          onChange({ name: event.target.value, detail: "" });
+          setOpen(true);
+        }}
+      />
+      {open && value.trim().length >= 2 && options.length > 0 && (
+        <div className="suggest" role="listbox">
+          {options.map((option) => (
+            <button
+              key={`${option.name}|${option.detail}`}
+              type="button"
+              role="option"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
+            >
+              <span className="suggest-name">{option.name}</span>
+              {option.detail && <span className="card-meta">{option.detail}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
   const same =
     draft.name === card.name &&
     draft.controller === card.controller &&
-    draft.zone === card.zone;
+    draft.zone === card.zone &&
+    Boolean(draft.tapped) === Boolean(card.tapped);
   const needsConfirm = card.identity === "confirm";
   const acceptedAsIs =
     card.placement === "accepted" && !needsConfirm && card.identity !== "choose" && same;
@@ -55,12 +123,13 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
           : "Accept change";
   const resolving = card.zone === "stack" && draft.zone !== "stack";
 
-  function pickName(name) {
+  function pickName(name, detail = "") {
     setDraft((current) => {
       const commander = commanders[current.controller];
       const zone =
         current.zone === "library" && commander && sameCard(name, commander) ? "command" : current.zone;
-      return { ...current, name, zone };
+      const kept = detail || (sameCard(name, current.name) ? current.detail : "");
+      return { ...current, name, detail: kept || "", zone };
     });
   }
 
@@ -69,16 +138,16 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
       {typeof card.image === "string" && card.image.startsWith("data:image/") && (
         <img className="card-crop" src={card.image} alt={card.name ? `${card.name} from the photo` : "Card from the photo"} />
       )}
-      <label className="card-name-field">
-        Name
-        <input
-          aria-label="Card name"
-          value={draft.name ?? ""}
-          maxLength={80}
-          onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-        />
-      </label>
-      <p>{card.note}</p>
+      <NameField
+        label="Name"
+        ariaLabel="Card name"
+        value={draft.name ?? ""}
+        onChange={({ name, detail }) => pickName(name, detail)}
+      />
+      {card.note && !(draft.name && (
+        card.note === "The read was uncertain. Pick the card."
+        || card.note === "The two readers disagree. Pick the card."
+      )) && <p>{card.note}</p>}
       <p>{card.reason}</p>
       {sourceLabel(card.sources) && <p className="card-src">{sourceLabel(card.sources)}</p>}
       {resolving && (
@@ -102,6 +171,15 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
           ))}
         </div>
       )}
+      <div className="choice-row">
+        <button
+          type="button"
+          className={draft.tapped ? "on" : ""}
+          onClick={() => setDraft((current) => ({ ...current, tapped: !current.tapped }))}
+        >
+          {draft.tapped ? "Tapped" : "Untapped"}
+        </button>
+      </div>
       <div className="choice-row">
         {SEATS.map((seat) => (
           <button
@@ -146,6 +224,8 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
               type: "apply",
               id: card.id,
               name: draft.name,
+              detail: draft.detail ?? "",
+              tapped: Boolean(draft.tapped),
               controller: draft.controller,
               zone: draft.zone,
             })
@@ -157,6 +237,37 @@ function Editor({ card, draft, setDraft, commanders, seatNames, send }) {
           Remove
         </button>
       </div>
+    </div>
+  );
+}
+
+function ScanMeter({ progress }) {
+  const [now, setNow] = useState(() => performance.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(performance.now()), 100);
+    return () => clearInterval(id);
+  }, []);
+  const left = secondsLeft(progress, now);
+  const budget = progress?.budget;
+  const indeterminate = left == null;
+  let pct = 0;
+  if (!indeterminate) {
+    pct = budget > 0 ? Math.max(0, Math.min(100, ((budget - left) / budget) * 100)) : 100;
+  }
+  const label = scanTimeLabel(left);
+  return (
+    <div className="scan-meter">
+      <div
+        className={indeterminate ? "scan-meter-track wait" : "scan-meter-track"}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={indeterminate ? undefined : Math.round(pct)}
+        aria-label="Scan progress"
+      >
+        <div className="scan-meter-fill" style={indeterminate ? undefined : { width: `${pct}%` }} />
+      </div>
+      <p className="scan-meter-time">{label}</p>
     </div>
   );
 }
@@ -216,6 +327,7 @@ function ScanWizard({ scan, seatNames }) {
           <p className="scan-note">
             {scan.note || `${who} · ${where}. Hold the phone a hand-span up, so the titles are readable.`}
           </p>
+          {scan.busy && <ScanMeter progress={scan.progress} />}
           {scan.pending ? (
             <div className="scan-actions">
               <button type="button" disabled={scan.busy} onClick={scan.onReplace}>
@@ -271,6 +383,7 @@ function CardRow({ card, seatNames, selected, onOpen, children }) {
         onClick={onOpen}
       >
         <span className="card-name">{card.name || "Unidentified"}</span>
+        {card.detail && <span className="card-meta">{card.detail}</span>}
         <span className="card-meta">{rowMeta(card, seatNames)}</span>
       </button>
       {selected && children}
@@ -300,6 +413,7 @@ export function BoardView({
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [adding, setAdding] = useState("");
+  const [addingDetail, setAddingDetail] = useState("");
   const [addSeat, setAddSeat] = useState(SEATS[0]);
   const askingTable = clarifyOn && session?.source === "table";
   const [clarifySeen, setClarifySeen] = useState(clarifyOn);
@@ -312,8 +426,20 @@ export function BoardView({
   }
 
   function open(card, nextDraft) {
+    if (!nextDraft && card.id === selectedId) {
+      setSelectedId(null);
+      setDraft(null);
+      return;
+    }
     setSelectedId(card.id);
-    setDraft(nextDraft ?? { name: card.name, controller: card.controller, zone: card.zone });
+    setDraft({
+      name: card.name,
+      controller: card.controller,
+      zone: card.zone,
+      detail: card.detail ?? "",
+      tapped: Boolean(card.tapped),
+      ...nextDraft,
+    });
   }
 
   const pending = board.cards.filter(
@@ -420,7 +546,7 @@ export function BoardView({
               names stay on that player. A disagreement asks you to pick. Or load the staged board.
             </p>
           )}
-          {scanning && <p className="board-empty">Reading the table…</p>}
+          {scanning && !scan?.step && <ScanMeter progress={scan?.progress} />}
           {board.cards.length > 0 && (
             <p className="board-limit">
               Face-down libraries, cards under other cards, which aura is on which creature, and
@@ -475,16 +601,19 @@ export function BoardView({
               event.preventDefault();
               const name = adding.trim();
               if (!name) return;
-              send({ type: "add", name, controller: addSeat, zone: "battlefield" });
+              send({ type: "add", name, detail: addingDetail, controller: addSeat, zone: "battlefield" });
               setAdding("");
+              setAddingDetail("");
             }}
           >
-            <input
-              aria-label="Add a card by name"
+            <NameField
+              ariaLabel="Add a card by name"
               placeholder="Add a card by name"
               value={adding}
-              maxLength={80}
-              onChange={(event) => setAdding(event.target.value)}
+              onChange={({ name, detail }) => {
+                setAdding(name);
+                setAddingDetail(detail);
+              }}
             />
             <div className="choice-row">
               {SEATS.map((seat) => (
