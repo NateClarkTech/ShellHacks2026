@@ -1,0 +1,178 @@
+{
+  "94fac5fe-97d5-4c12-a80c-8efff9d853ae": {
+    "name": "Blood Moon",
+    "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+    "oracle_text": "Nonbasic lands are Mountains.",
+    "rulings": [
+      {
+        "published_at": "2020-08-07",
+        "comment": "If a nonbasic land has an ability that triggers \"when\" it enters the battlefield, it will lose that ability before it can trigger."
+      },
+      {
+        "published_at": "2020-08-07",
+        "comment": "If a nonbasic land has an ability that causes it to enter the battlefield tapped, it will lose that ability before it can apply. The same is also true of any other abilities that modify how a land enters the battlefield or apply \"as\" a land enters the battlefield, such as the first ability of Cavern of Souls."
+      },
+      {
+        "published_at": "2020-08-07",
+        "comment": "Nonbasic lands will lose any other land types and abilities they had. They will gain the land type Mountain and gain the ability \"{T}: Add {R}.\""
+      },
+      {
+        "published_at": "2020-08-07",
+        "comment": "This effect doesn't affect names or supertypes. It won't turn any land into a basic land or remove the legendary supertype from a legendary land, and the lands won't be named \"Mountain.\""
+      }
+    ]
+  },
+  "db6174d7-211d-4817-b8e4-8384594c83f9": {
+    "name": "Urborg, Tomb of Yawgmoth",
+    "oracle_id": "db6174d7-211d-4817-b8e4-8384594c83f9",
+    "oracle_text": "Each land is a Swamp in addition to its other land types.",
+    "rulings": [
+      {
+        "published_at": "2021-03-19",
+        "comment": "Urborg, Tomb of Yawgmoth isn't a Swamp while it's not on the battlefield."
+      },
+      {
+        "published_at": "2021-03-19",
+        "comment": "Land cards not on the battlefield aren't Swamps while Urborg is on the battlefield."
+      },
+      {
+        "published_at": "2021-03-19",
+        "comment": "Urborg's ability causes each land on the battlefield to have the land type Swamp. Any land that's a Swamp has the ability \"{T}: Add {B}.\" Nothing else changes about those lands, including their names, other subtypes, other abilities, and whether they're legendary, basic, or snow."
+      },
+      {
+        "published_at": "2021-03-19",
+        "comment": "If an effect such as that of Magus of the Moon causes Urborg to lose its abilities by setting it to a basic land type not in addition to its other types, it won't turn lands into Swamps, no matter in what order those effects started to apply."
+      }
+    ]
+  },
+  "ed7bdb3e-5c51-4547-9266-76a791e0b2b0": {
+    "name": "Humility",
+    "oracle_id": "ed7bdb3e-5c51-4547-9266-76a791e0b2b0",
+    "oracle_text": "All creatures lose all abilities and have base power and toughness 1/1.",
+    "rulings": [
+      {
+        "published_at": "2009-10-01",
+        "comment": "This is the current interaction between Humility and Opalescence:\u00a0The type-changing effect applies at layer 4, but the rest happens in the applicable layers. The rest of it will apply even if the permanent loses its ability before it's finished applying. So if Opalescence, Humility, and Worship are on the battlefield and Opalescence entered before Humility, the following is true: Layer 4: Humility and Worship each become creatures that are still enchantments. (Opalescence). Layer 6: Humility and Worship each lose their abilities. (Humility) Layer 7b: Humility becomes 4/4 and Worship becomes 4/4. (Opalescence). Humility becomes 1/1 and Worship becomes 1/1 (Humility). But if Humility entered before Opalescence, the following is true: Layer 4: Humility and Worship each become creatures that are still enchantments (Opalescence). Layer 6: Humility and Worship each lose their abilities (Humility). Layer 7b: Humility becomes 1/1 and Worship becomes 1/1 (Humility). Humility becomes 4/4 and Worship becomes 4/4 (Opalescence)."
+      },
+      {
+        "published_at": "2007-02-01",
+        "comment": "Removes all creature abilities. This includes mana abilities. Animated lands will also lose the ability to tap for mana."
+      },
+      {
+        "published_at": "2006-02-01",
+        "comment": "With a Humility and two Opalescences on the battlefield, if Humility has the latest timestamp, then all creatures are 1/1 with no abilities. If the timestamp order is Opalescence, Humility, Opalescence, the second Opalescence is 1/1, and the Humility and first Opalescence are 4/4. If Humility has the earliest timestamp, then everything is 4/4."
+      }
+    ]
+  },
+  "e3886fe8-9b76-4613-8891-4ec74657c087": {
+    "name": "Glorious Anthem",
+    "oracle_id": "e3886fe8-9b76-4613-8891-4ec74657c087",
+    "oracle_text": "Creatures you control get +1/+1.",
+    "rulings": []
+  },
+  "087f9ad7-e74f-40e2-8102-1ed2925d0418": {
+    "name": "Rest in Peace",
+    "oracle_id": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+    "oracle_text": "When this enchantment enters, exile all graveyards.\nIf a card or token would be put into a graveyard from anywhere, exile it instead.",
+    "rulings": [
+      {
+        "published_at": "2018-03-16",
+        "comment": "While Rest in Peace is on the battlefield, abilities that trigger whenever a creature dies won't trigger because cards and tokens are never put into a player's graveyard."
+      },
+      {
+        "published_at": "2018-03-16",
+        "comment": "If Rest in Peace is destroyed by a spell, Rest in Peace will be exiled and then the spell will be put into its owner's graveyard."
+      },
+      {
+        "published_at": "2018-03-16",
+        "comment": "If a card is discarded while Rest in Peace is on the battlefield, abilities that function when a card is discarded (such as madness) still work, even though that card never reaches a graveyard. In addition, spells or abilities that check the characteristics of a discarded card (such as Chandra Ablaze's first ability) can find that card in exile."
+      }
+    ]
+  },
+  "b1544f21-7e98-461b-aed5-e748b0168c52": {
+    "name": "Swords to Plowshares",
+    "oracle_id": "b1544f21-7e98-461b-aed5-e748b0168c52",
+    "oracle_text": "Exile target creature. Its controller gains life equal to its power.",
+    "rulings": [
+      {
+        "published_at": "2022-12-08",
+        "comment": "Use the power of the creature from when it was last on the battlefield to determine how much life is gained."
+      }
+    ]
+  },
+  "d683d985-9888-4d21-8b5f-69e69ce4a03b": {
+    "name": "Path to Exile",
+    "oracle_id": "d683d985-9888-4d21-8b5f-69e69ce4a03b",
+    "oracle_text": "Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+    "rulings": [
+      {
+        "published_at": "2026-01-27",
+        "comment": "The controller of the exiled creature isn't required to search their library for a basic land. If that player doesn't, the player won't shuffle their library."
+      },
+      {
+        "published_at": "2026-01-27",
+        "comment": "If the target creature is an illegal target by the time Path to Exile tries to resolve, it won't resolve and none of its effects will happen. The creature's controller won't search for a basic land card."
+      }
+    ]
+  },
+  "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c": {
+    "name": "Eternal Witness",
+    "oracle_id": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
+    "oracle_text": "When this creature enters, you may return target card from your graveyard to your hand.",
+    "rulings": [
+      {
+        "published_at": "2021-03-19",
+        "comment": "If a resolving spell puts Eternal Witness onto the battlefield, Eternal Witness's ability can target that card if it's put into your graveyard as it resolves."
+      }
+    ]
+  },
+  "6ad8011d-3471-4369-9d68-b264cc027487": {
+    "name": "Sol Ring",
+    "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+    "oracle_text": "{T}: Add {C}{C}.",
+    "rulings": []
+  },
+  "7e6b9b59-cd68-4e3c-827b-38833c92d6eb": {
+    "name": "Atraxa, Praetors' Voice",
+    "oracle_id": "7e6b9b59-cd68-4e3c-827b-38833c92d6eb",
+    "oracle_text": "Flying, vigilance, deathtouch, lifelink\nAt the beginning of your end step, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+    "rulings": [
+      {
+        "published_at": "2023-02-04",
+        "comment": "To proliferate, you can choose any permanent that has a counter, including ones controlled by opponents. You can choose any player who has a counter, including opponents. You can't choose cards in any zone other than the battlefield, even if they have counters on them."
+      },
+      {
+        "published_at": "2023-02-04",
+        "comment": "You don't have to choose every permanent or player that has a counter, only the ones you want to add another counter to. Since \"any number\" includes zero, you don't have to choose any permanents at all, and you don't have to choose any players at all."
+      },
+      {
+        "published_at": "2023-02-04",
+        "comment": "If a player or permanent has more than one kind of counter on it, and you choose for it to get additional counters, it must get one of each kind of counter it already has. You can't have it get just one kind of counter it already has and not the others."
+      },
+      {
+        "published_at": "2023-02-04",
+        "comment": "An ability that triggers \"Whenever you proliferate\" triggers even if you chose no permanents or players while doing so."
+      },
+      {
+        "published_at": "2023-02-04",
+        "comment": "Players can respond to a spell or ability whose effect includes proliferating. Once that spell or ability starts to resolve, however, and its controller chooses which permanents and players will get new counters, it's too late for anyone to respond."
+      },
+      {
+        "published_at": "2023-02-04",
+        "comment": "If a permanent ever has both +1/+1 counters and -1/-1 counters on it at the same time, they're removed in pairs as a state-based action so that the permanent has only one of those kinds of counters on it."
+      }
+    ]
+  },
+  "d57a8f0b-7989-4db5-8756-6f2690097252": {
+    "name": "Damnation",
+    "oracle_id": "d57a8f0b-7989-4db5-8756-6f2690097252",
+    "oracle_text": "Destroy all creatures. They can't be regenerated.",
+    "rulings": []
+  },
+  "34515b16-c9a4-4f98-8c77-416a7a523407": {
+    "name": "Wrath of God",
+    "oracle_id": "34515b16-c9a4-4f98-8c77-416a7a523407",
+    "oracle_text": "Destroy all creatures. They can't be regenerated.",
+    "rulings": []
+  }
+}

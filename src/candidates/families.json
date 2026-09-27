@@ -1,0 +1,38 @@
+{
+  "layer_copy": ["clone", "copy-creature", "copy-permanent", "copy-spell", "copy-legendary"],
+  "layer_text": ["text-change"],
+  "layer_type": ["blood-moon-effect", "universal-type-change", "type-change", "any-zone-type-change"],
+  "layer_color": ["color-change"],
+  "layer_pt_modify": ["anthem", "power-doubler"],
+  "replacement": [
+    "self-replacement-effect",
+    "delayed-replacement-effect",
+    "prevent-etb",
+    "token-replacer",
+    "token-doubler",
+    "counter-doubler"
+  ],
+  "regenerate": ["regenerates-self", "regenerates-other", "neo-regenerate"],
+  "damage": [
+    "damage-increaser",
+    "damage-multiplier",
+    "damage-prevention",
+    "damage-redirection",
+    "unpreventable-damage"
+  ],
+  "tax": ["tax-attack", "tax-block", "cast-tax", "cost-increaser", "cost-reducer"],
+  "commander": ["commander-tax-evasion", "commander-tax-matters"],
+  "shield": [
+    "gives-hexproof",
+    "gains-hexproof",
+    "gives-player-hexproof",
+    "gives-shroud",
+    "gains-shroud",
+    "gives-protection",
+    "gains-protection",
+    "ward",
+    "gives-ward",
+    "old-ward"
+  ],
+  "trigger": ["trigger-doubler"]
+}

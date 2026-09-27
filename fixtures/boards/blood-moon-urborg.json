@@ -1,0 +1,67 @@
+{
+  "schema": "gs.v1",
+  "format": "commander",
+  "players": [
+    {
+      "id": "seat1",
+      "display_name": "Seat 1",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat2",
+      "display_name": "Seat 2",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat3",
+      "display_name": "Seat 3",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat4",
+      "display_name": "Seat 4",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj-blood-moon",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "name": "Blood Moon",
+      "zone": "battlefield",
+      "controller": "seat1",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    },
+    {
+      "id": "obj-urborg",
+      "oracle_id": "db6174d7-211d-4817-b8e4-8384594c83f9",
+      "name": "Urborg, Tomb of Yawgmoth",
+      "zone": "battlefield",
+      "controller": "seat2",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    }
+  ],
+  "unknowns": ["timestamps", "phase", "priority", "targets", "modes"],
+  "active_player": null,
+  "phase": null
+}

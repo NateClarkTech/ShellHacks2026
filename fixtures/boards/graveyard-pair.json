@@ -1,0 +1,67 @@
+{
+  "schema": "gs.v1",
+  "format": "commander",
+  "players": [
+    {
+      "id": "seat1",
+      "display_name": "Seat 1",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat2",
+      "display_name": "Seat 2",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat3",
+      "display_name": "Seat 3",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat4",
+      "display_name": "Seat 4",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj-rip",
+      "oracle_id": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+      "name": "Rest in Peace",
+      "zone": "battlefield",
+      "controller": "seat1",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    },
+    {
+      "id": "obj-witness",
+      "oracle_id": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
+      "name": "Eternal Witness",
+      "zone": "graveyard",
+      "controller": "seat2",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    }
+  ],
+  "unknowns": ["timestamps", "phase", "priority", "targets", "modes"],
+  "active_player": null,
+  "phase": null
+}

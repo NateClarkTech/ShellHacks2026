@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ClarifyPanel } from "./ClarifyPanel.jsx";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { scanTimeLabel, secondsLeft } from "./scanProgress.js";
@@ -401,6 +402,12 @@ export function BoardView({
   onRotatePhoto,
   send,
   scan,
+  clarifyOn = false,
+  session = null,
+  onClarifyToggle = () => {},
+  onSample = () => {},
+  onUseTable = () => {},
+  onToggleFocus = () => {},
 }) {
   const [facing, setFacing] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
@@ -408,6 +415,15 @@ export function BoardView({
   const [adding, setAdding] = useState("");
   const [addingDetail, setAddingDetail] = useState("");
   const [addSeat, setAddSeat] = useState(SEATS[0]);
+  const askingTable = clarifyOn && session?.source === "table";
+  const [clarifySeen, setClarifySeen] = useState(clarifyOn);
+  if (clarifySeen !== clarifyOn) {
+    setClarifySeen(clarifyOn);
+    if (clarifyOn) {
+      setSelectedId(null);
+      setDraft(null);
+    }
+  }
 
   function open(card, nextDraft) {
     if (!nextDraft && card.id === selectedId) {
@@ -444,15 +460,25 @@ export function BoardView({
   })).filter((group) => group.zones.length > 0);
 
   function renderCard(card) {
+    const named = Boolean(card.name) && card.identity !== "confirm";
+    const inFocus = askingTable && session.focus.selected_object_ids.includes(card.id);
     return (
       <CardRow
         key={card.id}
         card={card}
         seatNames={seatNames}
-        selected={card.id === selectedId}
-        onOpen={() => open(card)}
+        selected={askingTable ? inFocus : card.id === selectedId}
+        onOpen={() => {
+          if (!clarifyOn) {
+            open(card);
+            return;
+          }
+          if (!askingTable || !named) return;
+          onToggleFocus(card.id);
+        }}
       >
-        {draft && card.id === selectedId && (
+        {askingTable && !named && <p className="board-limit">Name this card before asking about it.</p>}
+        {!clarifyOn && draft && card.id === selectedId && (
           <Editor
             card={card}
             draft={draft}
@@ -470,6 +496,14 @@ export function BoardView({
     <section className="board-sheet" aria-label="Board">
       <header className="board-bar">
         <strong>Board</strong>
+        <button
+          type="button"
+          className={clarifyOn ? "on" : ""}
+          aria-pressed={clarifyOn}
+          onClick={onClarifyToggle}
+        >
+          Clarify
+        </button>
         <div className="board-tools">
           <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={scan?.onStart}>
             Scan
@@ -497,6 +531,15 @@ export function BoardView({
       <ScanWizard scan={scan} seatNames={seatNames} />
       <div className="board-rotator" data-facing={facing}>
         <div className="board-facing">
+          {clarifyOn && session && (
+            <ClarifyPanel
+              session={session}
+              seatNames={seatNames}
+              onSample={onSample}
+              onUseTable={onUseTable}
+              onToggleFocus={onToggleFocus}
+            />
+          )}
           {board.cards.length === 0 && !scanning && (
             <p className="board-empty">
               Tap Scan. Pick the player, then the zone, then take or upload a close photo. Agreed

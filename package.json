@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/game.test.js src/board.test.js src/vision.test.js src/scanProgress.test.js"
+    "test": "node --test src/game.test.js src/board.test.js src/vision.test.js src/scanProgress.test.js src/schema/gs.v1.test.js src/game-state/project.test.js src/cards/index.test.js src/cards/load.test.js src/candidates/engine.test.js src/resolver/citations.test.js"
   },
   "dependencies": {
     "react": "^19.2.8",
