@@ -16,21 +16,22 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build and deploy
-        uses: azure/container-apps-deploy-action@v1
-        with:
-          appSourcePath: ${{ github.workspace }}
-          acrName: elderdragonvip
-          containerAppName: elderdragon
-          resourceGroup: elderdragon
-          targetPort: 8000
-          ingress: external
+      - name: Log in to the registry
+        run: az acr login --name elderdragonvip
 
-      - name: Keep one warm replica and the keys
+      - name: Build and push
+        run: |
+          IMAGE="elderdragonvip.azurecr.io/elderdragon:${GITHUB_SHA}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy the image
         run: |
           az containerapp update \
             --name elderdragon \
             --resource-group elderdragon \
+            --image "$IMAGE" \
             --min-replicas 1 \
             --max-replicas 1 \
             --cpu 1.0 \
