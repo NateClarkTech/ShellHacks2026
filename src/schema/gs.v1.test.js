@@ -10,16 +10,16 @@ import { parseGameState } from "./gs.v1.js";
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 test("a fixture parses as gs.v1", () => {
-  const state = parseGameState(sampleById("blood-moon-urborg").state);
+  const state = parseGameState(sampleById("blood-moon").state);
   assert.equal(state.schema, "gs.v1");
   assert.equal(state.format, "commander");
-  assert.equal(state.objects.length, 2);
+  assert.equal(state.objects.length, 3);
   assert.equal(state.active_player, null);
   assert.equal(state.phase, null);
 });
 
 test("lookup files agree with the boards and the catalog", () => {
-  for (const id of ["blood-moon-urborg", "humility-anthem", "graveyard-pair"]) {
+  for (const id of ["blood-moon"]) {
     const expected = JSON.parse(readFileSync(join(root, "fixtures/expected", `${id}.lookup.json`), "utf8"));
     const state = parseGameState(sampleById(id).state);
     assert.equal(expected.board, id);

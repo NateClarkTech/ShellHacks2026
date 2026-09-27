@@ -1,0 +1,20 @@
+{
+  "board": "blood-moon",
+  "cards": [
+    {
+      "name": "Blood Moon",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "min_rulings": 1
+    },
+    {
+      "name": "Ashaya, Soul of the Wild",
+      "oracle_id": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+      "min_rulings": 1
+    },
+    {
+      "name": "Angel of Invention",
+      "oracle_id": "28c7f2b6-ba67-4ccf-9e1b-99c89a9d1f72",
+      "min_rulings": 1
+    }
+  ]
+}

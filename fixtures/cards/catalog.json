@@ -174,5 +174,51 @@
     "oracle_id": "34515b16-c9a4-4f98-8c77-416a7a523407",
     "oracle_text": "Destroy all creatures. They can't be regenerated.",
     "rulings": []
+  },
+  "162572f2-1757-42e9-bd97-e6bd9a762c0e": {
+    "name": "Ashaya, Soul of the Wild",
+    "oracle_id": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+    "oracle_text": "Ashaya's power and toughness are each equal to the number of lands you control.\nNontoken creatures you control are Forest lands in addition to their other types. (They're still affected by summoning sickness.)",
+    "rulings": [
+      {
+        "published_at": "2020-09-25",
+        "comment": "The ability that defines Ashaya's power and toughness applies in all zones, not just the battlefield."
+      },
+      {
+        "published_at": "2020-09-25",
+        "comment": "As long as Ashaya is on the battlefield, it's affected by its second ability and thus its first ability counts itself."
+      },
+      {
+        "published_at": "2020-09-25",
+        "comment": "Because damage remains marked on a creature until the damage is removed as the turn ends, nonlethal damage dealt to Ashaya may become lethal if lands you control leave the battlefield during that turn."
+      },
+      {
+        "published_at": "2020-09-25",
+        "comment": "You can't play creature cards as lands; you'll still have to cast them as spells, and they'll enter the battlefield as lands (in addition to their other types)."
+      },
+      {
+        "published_at": "2020-09-25",
+        "comment": "A land that's a Forest has the intrinsic mana ability \"{T}: Add {G}.\""
+      }
+    ]
+  },
+  "28c7f2b6-ba67-4ccf-9e1b-99c89a9d1f72": {
+    "name": "Angel of Invention",
+    "oracle_id": "28c7f2b6-ba67-4ccf-9e1b-99c89a9d1f72",
+    "oracle_text": "Flying, vigilance, lifelink\nFabricate 2 (When this creature enters, put two +1/+1 counters on it or create two 1/1 colorless Servo artifact creature tokens.)\nOther creatures you control get +1/+1.",
+    "rulings": [
+      {
+        "published_at": "2016-09-20",
+        "comment": "You choose whether to put +1/+1 counters on the creature or create Servo tokens as the fabricate ability is resolving. No player may take actions between the time you choose and the time that counters are added or tokens are created."
+      },
+      {
+        "published_at": "2016-09-20",
+        "comment": "Fabricate doesn't cause the creature with the ability to enter the battlefield with +1/+1 counters already on it. For example, Weaponcraft Enthusiast will enter the battlefield as a 0/1 creature, then its fabricate ability goes on the stack. Players may take actions (such as casting instants) while the ability is waiting to resolve."
+      },
+      {
+        "published_at": "2016-09-20",
+        "comment": "If you can't put +1/+1 counters on the creature for any reason as fabricate resolves (for instance, if it's no longer on the battlefield), you just create Servo tokens."
+      }
+    ]
   }
 }

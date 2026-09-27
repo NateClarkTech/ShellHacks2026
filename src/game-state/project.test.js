@@ -65,7 +65,7 @@ test("loading a fixture does not mutate the board passed to useTable", () => {
   board.cards = [card("card-1", "Sol Ring")];
   const before = structuredClone(board);
   const session = sessionFromTable(game, board);
-  sessionFromFixture(sampleById("blood-moon-urborg").state, "blood-moon-urborg");
+  sessionFromFixture(sampleById("blood-moon").state, "blood-moon");
   assert.deepEqual(board, before);
   assert.equal(session.game_state.objects[0].name, "Sol Ring");
 });
