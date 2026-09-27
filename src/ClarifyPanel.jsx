@@ -244,7 +244,7 @@ export function ClarifyPanel({ session, seatNames, onSample, onUseTable, onToggl
         ))}
       </div>
       {onTable && session.game_state.objects.length === 0 && (
-        <p>No cards on the table yet. Scan, load the staged board, or open a sample.</p>
+        <p>No cards on the table yet. Scan, or open a sample.</p>
       )}
       {!onTable && <p>Sample. The cards on the table stay as they are.</p>}
       {selected.length === 0 && <p>Select the cards in the argument.</p>}

@@ -392,7 +392,6 @@ export function BoardView({
   scanning,
   error,
   onClose,
-  onStaged,
   send,
   scan,
   clarifyOn = false,
@@ -511,9 +510,6 @@ export function BoardView({
           <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={scan?.onStart}>
             Scan
           </button>
-          <button type="button" disabled={scanning || Boolean(scan?.step)} onClick={onStaged}>
-            {scanning ? "Reading…" : "Staged"}
-          </button>
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
             Face
             <span className="board-action-sub">{playerName(BOTTOM_EDGE[facing], seatNames)}</span>
@@ -544,7 +540,7 @@ export function BoardView({
           {board.cards.length === 0 && !scanning && (
             <p className="board-empty">
               Tap Scan. Pick the player, then the zone, then take or upload a close photo. Agreed
-              names stay on that player. A disagreement asks you to pick. Or load the staged board.
+              names stay on that player. A disagreement asks you to pick.
             </p>
           )}
           {scanning && !scan?.step && <ScanMeter progress={scan?.progress} />}

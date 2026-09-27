@@ -3,7 +3,7 @@ import { BoardView } from "./BoardView.jsx";
 import { DragonMark } from "./DragonMark.jsx";
 import { Entry } from "./Entry.jsx";
 import { Seat } from "./Seat.jsx";
-import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
+import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, saveBoard } from "./board.js";
 import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
 import { emptyFocus } from "./schema/gs.v1.js";
 import { noteScanProgress, readScanEvents, readingProgress } from "./scanProgress.js";
@@ -15,7 +15,7 @@ const ORDER = ["seat1", "seat2", "seat4", "seat3"];
 
 function scanMessage(error) {
   if (error?.message === "Failed to fetch") {
-    return "The scan service is not running. Start it on the laptop, or load the staged board.";
+    return "The scan service is not running. Start it on the laptop.";
   }
   return error?.message || "The scan did not finish.";
 }
@@ -35,7 +35,6 @@ export default function App() {
   const [scanStarted, setScanStarted] = useState(false);
   const [pendingDup, setPendingDup] = useState(null);
   const [sessionId] = useState(() => globalThis.crypto?.randomUUID?.() ?? `scan-${Date.now()}`);
-  const [viewKey, setViewKey] = useState(0);
   const [clarifyOn, setClarifyOn] = useState(false);
   const [fixtureId, setFixtureId] = useState(null);
   const [focus, setFocus] = useState(emptyFocus);
@@ -230,25 +229,6 @@ export default function App() {
     }
   }
 
-  async function loadStaged() {
-    setScanning(true);
-    setScanProgress(readingProgress());
-    setScanError("");
-    setBoardOpen(true);
-    try {
-      const response = await fetch("/staged-scan.json");
-      if (!response.ok) throw new Error("The staged board is missing.");
-      const payload = await response.json();
-      setBoard((current) => replaceWithScan(current, payload, { commanders }));
-      setViewKey((key) => key + 1);
-    } catch (error) {
-      setScanError(scanMessage(error));
-    } finally {
-      setScanning(false);
-      setScanProgress(null);
-    }
-  }
-
   const projected = fixtureId
     ? sessionFromFixture(sampleById(fixtureId).state, fixtureId)
     : sessionFromTable(game, board);
@@ -285,14 +265,12 @@ export default function App() {
         {boardOpen && (
           <div className="scrim board-scrim">
             <BoardView
-              key={viewKey}
               board={board}
               seatNames={seatNames}
               commanders={commanders}
               scanning={scanning}
               error={scanError}
               onClose={closeBoard}
-              onStaged={loadStaged}
               send={sendBoard}
               clarifyOn={clarifyOn}
               session={session}
