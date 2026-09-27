@@ -1,0 +1,321 @@
+[
+  {
+    "id": 365,
+    "rule": "613",
+    "url": "https://rulesguru.org/?365RGBwnIIIg5yV4izTGG",
+    "answer": "Silverflame Squire is a black Goblin Zombie in addition to its other types and does get +1/+1. Dralnu's Crusade is dependent on Conspiracy, because applying Conspiracy first changes the set of permanents Dralnu's Crusade would apply to. (613.8a) Because of this, Conspiracy's effect is applied first, and then Dralnu's Crusade's effect. (613.8b)",
+    "cards": [
+      "Dralnu's Crusade",
+      "Silverflame Squire",
+      "Conspiracy"
+    ]
+  },
+  {
+    "id": 6821,
+    "rule": "613",
+    "url": "https://rulesguru.org/?6821RGBwnIIIeQKZAwzsGG",
+    "answer": "Any color. Blood Moon operates in the type-changing layer (613.1d) which is applied before the ability adding and removing layer. (613.1f) Simic Guildgate is a Mountain, with the additional ability \"{T}: Add one mana of any color.\".",
+    "cards": [
+      "Blood Moon",
+      "Simic Guildgate",
+      "Urban Utopia"
+    ]
+  },
+  {
+    "id": 1469,
+    "rule": "613",
+    "url": "https://rulesguru.org/?1469RGBwnIIIcWN1vFNMkLuiM246GG",
+    "answer": "Snow-Covered Wastes and Swamp have all basic land subtypes: \"Plains\", \"Island\", \"Swamp\", \"Mountain\", and \"Forest\". (305.6) Leyline of the Guildpact doesn't change supertypes and Zhao, the Moon Slayer affects nonbasic lands. (305.7)\n\nNaya Panorama has subtype Mountain. (305.7) There are no dependencies between Leyline of the Guildpact and Zhao, the Moon Slayer, so we apply the type-changing effects in timestamp order. (613.1d, 613.8a)\n\nDryad Arbor is now a Creature Land - Dryad Mountain. Gaining a basic land type doesn't remove other card types or nonland subtypes. (305.7)",
+    "cards": [
+      "Leyline of the Guildpact",
+      "Zhao, the Moon Slayer",
+      "Snow-Covered Wastes",
+      "Naya Panorama",
+      "Dryad Arbor",
+      "Swamp"
+    ]
+  },
+  {
+    "id": 97,
+    "rule": "613",
+    "url": "https://rulesguru.org/?97RGBwnIIIhKV35TqXGG",
+    "answer": "Inkmoth Nexus's ability gives it infect, and Melira, Sylvok Outcast's effect makes it lose infect. The effects are applied in timestamp order (613.3), so Inkmoth Nexus does not have infect. Nala will lose 1 life when damage is dealt.\n\n(There is no dependency here because neither effect changes the text or the existence of the other, what it applies to, or what it does to any of the things it applies to. (613.8a))",
+    "cards": [
+      "Inkmoth Nexus",
+      "Aethermage's Touch",
+      "Melira, Sylvok Outcast"
+    ]
+  },
+  {
+    "id": 2965,
+    "rule": "613",
+    "url": "https://rulesguru.org/?2965RGBwnIIIrlQM1QySGG",
+    "answer": "Yes. The ability granted by Rune of Flight has a later timestamp than the inherent ability of Starforged Sword and will be applied second causing Rotted Hystrix to gain flying after it has lost it. (613.7, 613.7a) When Starforged Sword becomes equipped it will gain a new timestamp (613.7e), but the relative timestamps of both objects will remain the same.",
+    "cards": [
+      "Starforged Sword",
+      "Rune of Flight",
+      "Rotted Hystrix"
+    ]
+  },
+  {
+    "id": 298,
+    "rule": "614",
+    "url": "https://rulesguru.org/?298RGBwnIII28zj52GG",
+    "answer": "Tapped. To determine what replacement effects apply to a permanent as it enters the battlefield, the game looks at the permanent as it would exist on the battlefield. (614.12) On the battlefield Rusted Relic would be a creature, so Imposing Sovereign's effect will apply to it.",
+    "cards": [
+      "Rusted Relic",
+      "Imposing Sovereign"
+    ]
+  },
+  {
+    "id": 3670,
+    "rule": "614",
+    "url": "https://rulesguru.org/?3670RGBwnIII1FptvAGG",
+    "answer": "They're 4/4 white Angel creature tokens with flying, vigilance, and haste. They will be sacrificed at the beginning of the next end step.\n\nThe instructions of Chandra, Acolyte of Flame's ability are followed in the order written. (608.2c) Divine Visitation's replacement effect will replace creating the 1/1 red Elemental creature tokens with creating 4/4 white Angel creature tokens with flying and vigilance instead. (614.1, 614.1a) The tokens that were created then gain haste. Divine Visitation has no effect on the rest of Chandra, Acolyte of Flame's ability so the delayed trigger will still trigger at the beginning of the next end step, causing the tokens to be sacrificed when it resolves.",
+    "cards": [
+      "Divine Visitation",
+      "Chandra, Acolyte of Flame"
+    ]
+  },
+  {
+    "id": 2554,
+    "rule": "614",
+    "url": "https://rulesguru.org/?2554RGBwnIIIdkLGG",
+    "answer": "Alijah is required to attempt to find a card from outside the game, if they fail to find one, then when the ability resolves they will put nothing into their hand. (400.11) Since Ring of Ma'r\u00fbf sets up a replacement effect, Alijah can't choose to ignore it. (614.1a)",
+    "cards": [
+      "Ring of Ma'r\u00fbf"
+    ]
+  },
+  {
+    "id": 463,
+    "rule": "614",
+    "url": "https://rulesguru.org/?463RGBwnIIIjy4jxci1GG",
+    "answer": "Alana's library.\n\nTwo replacement effects are trying to replace the same event. Since Hinder's effect is a self-replacement effect (614.15), it applies first. (616.1, 616.1a) Once it's applied, Preordain is moving to the library and Torrential Gearhulk's effect no longer applies.",
+    "cards": [
+      "Preordain",
+      "Torrential Gearhulk",
+      "Hinder"
+    ]
+  },
+  {
+    "id": 890,
+    "rule": "614",
+    "url": "https://rulesguru.org/?890RGBwnIII1UvWLzGG",
+    "answer": "Whirlwing Stormbrood is exiled and Ace creates a 2/2 Zombie. Kalitas, Traitor of Ghet's ability creates a replacement effect (614.1a), which applies to future events immediately before they happen. (614.1/614.4/614.6) Since Kalitas, Traitor of Ghet and Whirlwing Stormbrood are dying at the same time (510.2, 704.5g), Kalitas, Traitor of Ghet's effect can apply to that event.",
+    "cards": [
+      "Kalitas, Traitor of Ghet",
+      "Whirlwing Stormbrood"
+    ]
+  },
+  {
+    "id": 1032,
+    "rule": "616",
+    "url": "https://rulesguru.org/?1032RGBwnIII1A927FGG",
+    "answer": "Quantum Misalignment will have two instances of Rebound. (702.88a) As it resolves, Ariel will choose which instance of Rebound will exile the spell. (616.1) After applying that effect the Quantum Misalignment is no longer moving to the graveyard, so the other rebound effect is no longer applicable. There will only be one rebound trigger on the following upkeep.",
+    "cards": [
+      "Cast Through Time",
+      "Quantum Misalignment"
+    ]
+  },
+  {
+    "id": 617,
+    "rule": "616",
+    "url": "https://rulesguru.org/?617RGBwnIIImqCJgo9XGG",
+    "answer": "11 or 12, depending on how Abdiel applies the effects from Winding Constrictor and Primal Vigor. (616.1)\n\nThe replacement effect from Hooded Hydra's ability creates an event that Winding Constrictor and Primal Vigor can apply to. Abdiel is able to order these however they like. (616.1) Each effect can only be applied once. (614.5)\n\nBy applying Winding Constrictor then Primal Vigor, Hooded Hydra will get 12 counters.\nBy applying Primal Vigor then Winding Constrictor, Hooded Hydra will get 11 counters.",
+    "cards": [
+      "Winding Constrictor",
+      "Primal Vigor",
+      "Hooded Hydra"
+    ]
+  },
+  {
+    "id": 334,
+    "rule": "616",
+    "url": "https://rulesguru.org/?334RGBwnIIIig83XQXLGG",
+    "answer": "Whichever Nico prefers. There are two replacement effects applying to Wilt-Leaf Liege going to the graveyard. Nico is the controller of the affected object, so they choose where it ends up. (614.1a, 616.1) ",
+    "cards": [
+      "Leyline of the Void",
+      "Flay",
+      "Wilt-Leaf Liege"
+    ]
+  },
+  {
+    "id": 1713,
+    "rule": "616",
+    "url": "https://rulesguru.org/?1713RGBwnIIIhkFTfFpiGG",
+    "answer": "Green or black, Alonso's choice. When multiple replacement effects would apply, the controller of the object affected or the player affected chooses which one to apply first. (616.1) Then the other applies.",
+    "cards": [
+      "Hall of Gemstone",
+      "Contamination",
+      "Island"
+    ]
+  },
+  {
+    "id": 2569,
+    "rule": "616",
+    "url": "https://rulesguru.org/?2569RGBwnIII2XSAWWhmpMMGG",
+    "answer": "Either 5 or 6, depending on the order of the choices that Addilynn makes. Master Biomancer's effect needs to be applied first since none of the other effects apply to Vorinclex, Monstrous Raider entering without counters. Vorinclex, Monstrous Raider has no effect on itself because it needs to be on the battlefield before a creature enters in order to apply to it. (614.4, 614.12) So the only choice Addilynn has is whether to apply Branching Evolution's effect first and end up with 5 counters or to apply Hardened Scales's effect first and end up with 6 counters. (616.1)",
+    "cards": [
+      "Master Biomancer",
+      "Hardened Scales",
+      "Branching Evolution",
+      "Vorinclex, Monstrous Raider"
+    ]
+  },
+  {
+    "id": 278,
+    "rule": "702",
+    "url": "https://rulesguru.org/?278RGBwnIII25f9DEGG",
+    "answer": "No. Nova may reveal Terminus as it's drawn (702.94a), but then it's discarded. The miracle trigger is only put onto the stack after Pull from Tomorrow has finished resolving (603.3), and the Terminus isn't in Nova's hand to be cast when it resolves. (702.94a)",
+    "cards": [
+      "Pull from Tomorrow",
+      "Terminus"
+    ]
+  },
+  {
+    "id": 110,
+    "rule": "702",
+    "url": "https://rulesguru.org/?110RGBwnIIIi696HCFhGG",
+    "answer": "None. No creatures were destroyed, only an enchantment. (702.89a)",
+    "cards": [
+      "Kobolds of Kher Keep",
+      "Bear Umbra",
+      "Overwhelming Forces"
+    ]
+  },
+  {
+    "id": 7369,
+    "rule": "702",
+    "url": "https://rulesguru.org/?7369RGBwnIII2gv3J6GG",
+    "answer": "Yes. A card with suspend can be suspended any time the player has priority and they could legally begin casting that spell. (702.62a) Teferi, Time Raveler's ability gives Ariah permission to cast sorceries as though they had flash, so Ariah could legally begin casting Ecstatic Beauty, and they could also therefore suspend it. (601.3)",
+    "cards": [
+      "Teferi, Time Raveler",
+      "Ecstatic Beauty"
+    ]
+  },
+  {
+    "id": 86,
+    "rule": "702",
+    "url": "https://rulesguru.org/?86RGBwnIIIh0MaZ8kbGG",
+    "answer": "Adan can choose to have either blocking creature die, or to have both of them die. They make this choice as damage is assigned in the combat damage step. (510.1c, 702.2c)",
+    "cards": [
+      "Gifted Aetherborn",
+      "Lagac Lizard",
+      "Eager Cadet"
+    ]
+  },
+  {
+    "id": 4447,
+    "rule": "702",
+    "url": "https://rulesguru.org/?4447RGBwnIIIemvffjaPGG",
+    "answer": "When Animate Dead's trigger resolves, Phyrexian Metamorph enters the battlefield as a copy of Darksteel Garrison. Animate Dead can't attach to it, since it's not a creature put onto the battlefield with Animate Dead. (303.4j/702.5a) The next time state-based actions are checked, Animate Dead is put into the graveyard since it's not enchanting anything. (303.4c/704.5m) This triggers Animate Dead's delayed trigger and Aden will sacrifice Phyrexian Metamorph. (700.7)",
+    "cards": [
+      "Animate Dead",
+      "Phyrexian Metamorph",
+      "Darksteel Garrison"
+    ]
+  },
+  {
+    "id": 1804,
+    "rule": "704",
+    "url": "https://rulesguru.org/?1804RGBwnIIIhYA0xTNYGG",
+    "answer": "Elven Bow will become an Equipment artifact creature and will become unattached from Minotaur Abomination as a state-based action. (704.5p)",
+    "cards": [
+      "Karn, Silver Golem",
+      "Elven Bow",
+      "Minotaur Abomination"
+    ]
+  },
+  {
+    "id": 2543,
+    "rule": "704",
+    "url": "https://rulesguru.org/?2543RGBwnIIIdufGG",
+    "answer": "As soon as the spell finishes resolving, state-based actions are checked and Adan will need to choose one Sarkhan, the Dragonspeaker to put into their graveyard. Regardless of what card type they are, both Sarkhan, the Dragonspeaker are legendary permanents with the same name, and therefore the 'legend rule' applies. (704.5j)\n",
+    "cards": [
+      "Sarkhan, the Dragonspeaker"
+    ]
+  },
+  {
+    "id": 6950,
+    "rule": "704",
+    "url": "https://rulesguru.org/?6950RGBwnIIIkiq7YOH2GG",
+    "answer": "The game ends in a draw. Deflecting Palm deals damage to Alfred immediately after Indomitable Ancients deals damage to Nico. (615.5) The next time state-based actions are checked, both players are at 0 life and lose at the same time (104.3b, 704.3), making the game a draw. (104.4a)",
+    "cards": [
+      "Savannah Lions",
+      "Indomitable Ancients",
+      "Deflecting Palm"
+    ]
+  },
+  {
+    "id": 96,
+    "rule": "704",
+    "url": "https://rulesguru.org/?96RGBwnIII2gkWFdGG",
+    "answer": "No. As Skeletonize resolves, it first deals 3 damage to Tarmogoyf, then Skeletonize is put into the graveyard and Tarmogoyf becomes a 3/4. (608.2n, 611.3a) Creatures only die due to having lethal damage marked on them when state-based actions are checked (120.5/302.7/704.5g), which doesn't happen until after Skeletonize has finished resolving. (117.5/405.6f/704.3)",
+    "cards": [
+      "Tarmogoyf",
+      "Skeletonize"
+    ]
+  },
+  {
+    "id": 685,
+    "rule": "704",
+    "url": "https://rulesguru.org/?685RGBwnIII2csopSGG",
+    "answer": "Two.\n\nDeafening Clarion deals three damage to each creature, then gives them lifelink. (608.2c) After the spell has resolved, state-based actions are checked and both creatures die. (120.5/704.5g) Slimefoot, the Stowaway's ability is a leave-the-battlefield trigger, so it sees that it existed immediately before Slimefoot, the Stowaway died and therefore triggers. (603.10, 603.10a) When it resolves, it sees that Slimefoot, the Stowaway had lifelink right before it died, so Ariel gains 1 life from the damage that's dealt to Nelson. (113.7a/702.15c)",
+    "cards": [
+      "Slimefoot, the Stowaway",
+      "Deafening Clarion"
+    ]
+  },
+  {
+    "id": 863,
+    "rule": "903",
+    "url": "https://rulesguru.org/?863RGBwnIIIdCiGG",
+    "answer": "6/6. The starting life total in commander is 40. (903.7)",
+    "cards": [
+      "Serra Ascendant"
+    ]
+  },
+  {
+    "id": 3188,
+    "rule": "903",
+    "url": "https://rulesguru.org/?3188RGBwnIIId1uGG",
+    "answer": "Yes. Despite being face-down, it's still Noel's commander (903.3), and they can choose to have it move to the command zone as a state-based action. (903.9a/704.6d)",
+    "cards": [
+      "Praetor's Grasp"
+    ]
+  },
+  {
+    "id": 3636,
+    "rule": "903",
+    "url": "https://rulesguru.org/?3636RGBwnIIInNcy8xg0GG",
+    "answer": "Yes. The commander designation is a property of the card itself, meaning both sides of the card are considered to be Alvaro's commander. (903.3)",
+    "cards": [
+      "Shaile, Dean of Radiance",
+      "Jeweled Lotus",
+      "Embrose, Dean of Shadow"
+    ]
+  },
+  {
+    "id": 3586,
+    "rule": "903",
+    "url": "https://rulesguru.org/?3586RGBwnIII2YVJtiiw0QjGG",
+    "answer": "Yes. Before the undying trigger is put on the stack, state-based actions are checked. (704.3/117.5) At this point, Nicolas could choose to put Dogmeat, Ever Loyal in the command zone as a state-based action. (704.6d/903.9a)",
+    "cards": [
+      "Mikaeus, the Unhallowed",
+      "Ruthless Knave",
+      "Dogmeat, Ever Loyal",
+      "The Shattered States Era"
+    ]
+  },
+  {
+    "id": 316,
+    "rule": "903",
+    "url": "https://rulesguru.org/?316RGBwnIIIqOFg81l5GG",
+    "answer": "Yes. Commanders do move to the graveyard when sacrificed. They may be put into the command zone when state-based actions are checked. (704.6d/903.9a)",
+    "cards": [
+      "Funeral Room",
+      "Judith, the Scourge Diva",
+      "Circle of Despair"
+    ]
+  }
+]

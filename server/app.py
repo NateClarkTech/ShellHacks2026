@@ -1,9 +1,11 @@
 import json
 import os
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.cards import lookup_card
+from server.clarify import fetch_clarifications
 from server.vision.scan import CACHE, run_scan
 
 app = FastAPI(title="Commander table")
@@ -30,6 +32,27 @@ def health():
         "azure": bool(os.environ.get("AZURE_VISION_KEY") and os.environ.get("AZURE_VISION_ENDPOINT")),
         "names": names,
     }
+
+
+@app.get("/api/card")
+async def card(name: str = ""):
+    cleaned = name.strip()
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Name the card.")
+    found = await lookup_card(cleaned)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Scryfall has no card by that name.")
+    return found
+
+
+@app.post("/api/clarify")
+async def clarify(payload: dict = Body(...)):
+    try:
+        return await fetch_clarifications(payload)
+    except PermissionError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=502, detail="The model did not answer.") from error
 
 
 SEATS = {"seat1", "seat2", "seat3", "seat4"}

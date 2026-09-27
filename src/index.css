@@ -828,3 +828,56 @@ button.field.partner-name {
 }
 
 .add-card { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+.board-bar button.on {
+  border-color: #c6a15b;
+  background: #1c3a2c;
+}
+
+.clarify-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.clarify-panel p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.clarify-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.oracle-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.ruling-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruling-list li {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ruling-list time {
+  display: block;
+  color: #c6a15b;
+  font-size: 12px;
+}

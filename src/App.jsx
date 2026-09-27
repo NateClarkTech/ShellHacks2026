@@ -3,6 +3,9 @@ import { BoardView } from "./BoardView.jsx";
 import { Seat } from "./Seat.jsx";
 import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
 import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
+import { emptyFocus } from "./schema/gs.v1.js";
+import { sampleById } from "./session/fixtures.js";
+import { selectToggle, sessionFromFixture, sessionFromTable } from "./session/session.js";
 import { assembleScan, duplicateShare } from "./vision.js";
 
 const ORDER = ["seat1", "seat2", "seat4", "seat3"];
@@ -30,6 +33,9 @@ export default function App() {
   const [pendingDup, setPendingDup] = useState(null);
   const [sessionId] = useState(() => globalThis.crypto?.randomUUID?.() ?? `scan-${Date.now()}`);
   const [viewKey, setViewKey] = useState(0);
+  const [clarifyOn, setClarifyOn] = useState(false);
+  const [fixtureId, setFixtureId] = useState(null);
+  const [focus, setFocus] = useState(emptyFocus);
 
   const commanders = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].commander]));
   const seatNames = Object.fromEntries(
@@ -223,6 +229,15 @@ export default function App() {
     }
   }
 
+  const projected = fixtureId
+    ? sessionFromFixture(sampleById(fixtureId).state, fixtureId)
+    : sessionFromTable(game, board);
+  const session = { ...projected, focus };
+
+  function toggleFocus(objectId) {
+    setFocus((current) => selectToggle({ ...session, focus: current }, objectId).focus);
+  }
+
   const choosing = !game.turnStart;
 
   return (
@@ -257,6 +272,18 @@ export default function App() {
             onStaged={loadStaged}
             onRotatePhoto={(direction) => sendBoard({ type: "rotate", direction, commanders })}
             send={sendBoard}
+            clarifyOn={clarifyOn}
+            session={session}
+            onClarifyToggle={() => setClarifyOn((on) => !on)}
+            onSample={(id) => {
+              setFixtureId(id);
+              setFocus(emptyFocus());
+            }}
+            onUseTable={() => {
+              setFixtureId(null);
+              setFocus(emptyFocus());
+            }}
+            onToggleFocus={toggleFocus}
             scan={{
               step: scanStep,
               seat: scanSeat,

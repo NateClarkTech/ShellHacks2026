@@ -1,0 +1,15 @@
+{
+  "board": "graveyard-pair",
+  "cards": [
+    {
+      "name": "Rest in Peace",
+      "oracle_id": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+      "min_rulings": 1
+    },
+    {
+      "name": "Eternal Witness",
+      "oracle_id": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
+      "min_rulings": 1
+    }
+  ]
+}

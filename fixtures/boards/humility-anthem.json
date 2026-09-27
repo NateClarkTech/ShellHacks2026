@@ -1,0 +1,67 @@
+{
+  "schema": "gs.v1",
+  "format": "commander",
+  "players": [
+    {
+      "id": "seat1",
+      "display_name": "Seat 1",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat2",
+      "display_name": "Seat 2",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat3",
+      "display_name": "Seat 3",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    },
+    {
+      "id": "seat4",
+      "display_name": "Seat 4",
+      "life": 40,
+      "poison": 0,
+      "commander_names": [],
+      "commander_oracle_ids": []
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj-humility",
+      "oracle_id": "ed7bdb3e-5c51-4547-9266-76a791e0b2b0",
+      "name": "Humility",
+      "zone": "battlefield",
+      "controller": "seat1",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    },
+    {
+      "id": "obj-anthem",
+      "oracle_id": "e3886fe8-9b76-4613-8891-4ec74657c087",
+      "name": "Glorious Anthem",
+      "zone": "battlefield",
+      "controller": "seat2",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    }
+  ],
+  "unknowns": ["timestamps", "phase", "priority", "targets", "modes"],
+  "active_player": null,
+  "phase": null
+}
