@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { BoardView } from "./BoardView.jsx";
+import { DragonMark } from "./DragonMark.jsx";
+import { Entry } from "./Entry.jsx";
 import { Seat } from "./Seat.jsx";
 import { ZONE_LABEL, appendScan, emptyBoard, lastPhotoId, loadBoard, reduceBoard, replaceWithScan, saveBoard } from "./board.js";
 import { SEATS, isDefaultName, loadGame, reduce, saveGame, seatOrderName } from "./game.js";
@@ -37,6 +39,9 @@ export default function App() {
   const [clarifyOn, setClarifyOn] = useState(false);
   const [fixtureId, setFixtureId] = useState(null);
   const [focus, setFocus] = useState(emptyFocus);
+  const [intro, setIntro] = useState(
+    () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   const commanders = Object.fromEntries(SEATS.map((seat) => [seat, game.seats[seat].commander]));
   const seatNames = Object.fromEntries(
@@ -254,109 +259,119 @@ export default function App() {
   }
 
   const choosing = !game.turnStart;
+  const showLogo = choosing && !boardOpen && !resetAsk;
 
   return (
     <main className="table">
-      {ORDER.map((seat) => (
-        <Seat
-          key={seat}
-          seat={seat}
-          game={game}
-          choosing={choosing}
-          canUndo={game.past.length > 0}
-          send={send}
-          onFirst={() => send({ type: "first", seat })}
-          onReset={() => setResetAsk(seat)}
-        />
-      ))}
-      {!boardOpen && !resetAsk && !choosing && (
-        <button type="button" className="board-launch" onClick={() => setBoardOpen(true)}>
-          Board
-        </button>
-      )}
-      {boardOpen && (
-        <div className="scrim board-scrim">
-          <BoardView
-            key={viewKey}
-            board={board}
-            seatNames={seatNames}
-            commanders={commanders}
-            scanning={scanning}
-            error={scanError}
-            onClose={closeBoard}
-            onStaged={loadStaged}
-            send={sendBoard}
-            clarifyOn={clarifyOn}
-            session={session}
-            onClarifyToggle={() => setClarifyOn((on) => !on)}
-            onSample={(id) => {
-              setFixtureId(id);
-              setFocus(emptyFocus());
-            }}
-            onUseTable={() => {
-              setFixtureId(null);
-              setFocus(emptyFocus());
-            }}
-            onToggleFocus={toggleFocus}
-            scan={{
-              step: scanStep,
-              seat: scanSeat,
-              zone: scanZone,
-              note: scanNote,
-              busy: scanning,
-              progress: scanProgress,
-              started: Boolean(scanSeat && scanZone && lastPhotoId(board, scanSeat, scanZone)),
-              added: scanStarted,
-              pending: Boolean(pendingDup),
-              onStart: startScan,
-              onSeat: chooseScanSeat,
-              onZone: chooseScanZone,
-              onBack: scanBack,
-              onCapture: captureScan,
-              onDone: doneScan,
-              onReplace: () => {
-                if (!pendingDup) return;
-                commitScan(pendingDup.payload, pendingDup.replacePhotoId);
-                setScanNote("Replaced the last photo.");
-              },
-              onKeep: () => {
-                if (!pendingDup) return;
-                commitScan(pendingDup.payload, null);
-                setScanNote("Kept both photos.");
-              },
-            }}
+      <h1 className="file-clip">Elder Dragon Lawyer</h1>
+      <div className="table-body" inert={intro ? true : undefined}>
+        {ORDER.map((seat) => (
+          <Seat
+            key={seat}
+            seat={seat}
+            game={game}
+            choosing={choosing}
+            canUndo={game.past.length > 0}
+            send={send}
+            onFirst={() => send({ type: "first", seat })}
+            onReset={() => setResetAsk(seat)}
           />
-        </div>
-      )}
-      {resetAsk && (
-        <div className="scrim">
-          <div
-            className="confirm"
-            data-seat={resetAsk}
-            role="dialog"
-            aria-label="Reset the game"
-          >
-            <p>This clears the life totals and the board.</p>
-            <div className="confirm-actions">
-              <button type="button" onClick={() => setResetAsk(null)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="danger"
-                onClick={() => {
-                  setResetAsk(null);
-                  send({ type: "reset" });
-                  setBoard(emptyBoard());
-                  doneScan();
-                }}
-              >
-                Reset
-              </button>
+        ))}
+        {!boardOpen && !resetAsk && !choosing && (
+          <button type="button" className="board-launch" onClick={() => setBoardOpen(true)}>
+            Board
+          </button>
+        )}
+        {boardOpen && (
+          <div className="scrim board-scrim">
+            <BoardView
+              key={viewKey}
+              board={board}
+              seatNames={seatNames}
+              commanders={commanders}
+              scanning={scanning}
+              error={scanError}
+              onClose={closeBoard}
+              onStaged={loadStaged}
+              send={sendBoard}
+              clarifyOn={clarifyOn}
+              session={session}
+              onClarifyToggle={() => setClarifyOn((on) => !on)}
+              onSample={(id) => {
+                setFixtureId(id);
+                setFocus(emptyFocus());
+              }}
+              onUseTable={() => {
+                setFixtureId(null);
+                setFocus(emptyFocus());
+              }}
+              onToggleFocus={toggleFocus}
+              scan={{
+                step: scanStep,
+                seat: scanSeat,
+                zone: scanZone,
+                note: scanNote,
+                busy: scanning,
+                progress: scanProgress,
+                started: Boolean(scanSeat && scanZone && lastPhotoId(board, scanSeat, scanZone)),
+                added: scanStarted,
+                pending: Boolean(pendingDup),
+                onStart: startScan,
+                onSeat: chooseScanSeat,
+                onZone: chooseScanZone,
+                onBack: scanBack,
+                onCapture: captureScan,
+                onDone: doneScan,
+                onReplace: () => {
+                  if (!pendingDup) return;
+                  commitScan(pendingDup.payload, pendingDup.replacePhotoId);
+                  setScanNote("Replaced the last photo.");
+                },
+                onKeep: () => {
+                  if (!pendingDup) return;
+                  commitScan(pendingDup.payload, null);
+                  setScanNote("Kept both photos.");
+                },
+              }}
+            />
+          </div>
+        )}
+        {resetAsk && (
+          <div className="scrim">
+            <div
+              className="confirm"
+              data-seat={resetAsk}
+              role="dialog"
+              aria-label="Reset the game"
+            >
+              <p>This clears the life totals and the board.</p>
+              <div className="confirm-actions">
+                <button type="button" onClick={() => setResetAsk(null)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => {
+                    setResetAsk(null);
+                    send({ type: "reset" });
+                    setBoard(emptyBoard());
+                    doneScan();
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
+        )}
+      </div>
+      {showLogo && (
+        <div className={`table-mark${intro ? " mark-arrive" : ""}`} aria-hidden="true">
+          <DragonMark arrive={intro} />
         </div>
       )}
+      {intro && <Entry showMark={!showLogo} onDone={() => setIntro(false)} />}
     </main>
   );
 }
