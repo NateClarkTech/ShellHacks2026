@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ClarifyPanel } from "./ClarifyPanel.jsx";
+import { ClarifyPanel, OracleDisclosure } from "./ClarifyPanel.jsx";
 import { SEATS, seatOrderName } from "./game.js";
 import { ZONE_LABEL, ZONES } from "./board.js";
 import { scanView } from "./scanProgress.js";
@@ -368,7 +368,7 @@ function ScanWizard({ scan, seatNames }) {
   );
 }
 
-function CardRow({ card, seatNames, selected, onOpen, children }) {
+function CardRow({ card, seatNames, selected, extra, onOpen, children }) {
   return (
     <div className="card-block">
       <button
@@ -380,7 +380,7 @@ function CardRow({ card, seatNames, selected, onOpen, children }) {
         {card.detail && <span className="card-meta">{card.detail}</span>}
         <span className="card-meta">{rowMeta(card, seatNames)}</span>
       </button>
-      {selected && children}
+      {(selected || extra) && children}
     </div>
   );
 }
@@ -409,6 +409,7 @@ export function BoardView({
   const [adding, setAdding] = useState("");
   const [addingDetail, setAddingDetail] = useState("");
   const [addSeat, setAddSeat] = useState(SEATS[0]);
+  const [hintId, setHintId] = useState(null);
   const askingTable = clarifyOn && session?.source === "table";
   const [clarifySeen, setClarifySeen] = useState(clarifyOn);
   if (clarifySeen !== clarifyOn) {
@@ -416,6 +417,7 @@ export function BoardView({
     if (clarifyOn) {
       setSelectedId(null);
       setDraft(null);
+      setHintId(null);
     }
   }
 
@@ -462,16 +464,25 @@ export function BoardView({
         card={card}
         seatNames={seatNames}
         selected={askingTable ? inFocus : card.id === selectedId}
+        extra={askingTable && hintId === card.id && !named}
         onOpen={() => {
           if (!clarifyOn) {
+            setHintId(null);
             open(card);
             return;
           }
-          if (!askingTable || !named) return;
+          if (!askingTable || !named) {
+            setHintId(card.id);
+            return;
+          }
+          setHintId(null);
           onToggleFocus(card.id);
         }}
       >
-        {askingTable && !named && <p className="board-limit">Name this card before asking about it.</p>}
+        {askingTable && hintId === card.id && !named && (
+          <p className="board-limit">Name this card before asking about it.</p>
+        )}
+        {askingTable && inFocus && named && <OracleDisclosure name={card.name} />}
         {!clarifyOn && draft && card.id === selectedId && (
           <Editor
             card={card}

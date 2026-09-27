@@ -21,38 +21,73 @@ function who(controller, seatNames) {
   return seatNames[controller] || seatOrderName(controller);
 }
 
-function CardWriteup({ object, seatNames, record, status }) {
+export function OracleDisclosure({ name }) {
+  const known = cachedCard(name);
+  const [record, setRecord] = useState(known);
+  const [status, setStatus] = useState(() => {
+    if (!normName(name)) return "missing";
+    return known ? "ready" : "loading";
+  });
+
+  useEffect(() => {
+    const cached = cachedCard(name);
+    if (cached) {
+      setRecord(cached);
+      setStatus("ready");
+      return undefined;
+    }
+    let cancelled = false;
+    setRecord(null);
+    setStatus(normName(name) ? "loading" : "missing");
+    loadCard(name)
+      .then((card) => {
+        if (cancelled) return;
+        if (!card || card.missing) {
+          setStatus("missing");
+          return;
+        }
+        setRecord(card);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("down");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [name]);
+
   const matched = record?.matched_name;
-  const showMatch = matched && normName(matched) !== normName(object.name);
+  const showMatch = matched && normName(matched) !== normName(name);
+
   return (
-    <div className="clarify-card">
-      <p className="card-name">{object.name}</p>
-      <p className="card-meta">
-        {who(object.controller, seatNames)} · {ZONE_LABEL[object.zone]}
-      </p>
-      {status === "loading" && <p>Looking up this card.</p>}
-      {status === "down" && <p>The scan service is not running, so this card's text can't be loaded.</p>}
-      {status === "missing" && <p>Scryfall has no card by that name.</p>}
-      {status === "ready" && record && (
-        <>
-          {showMatch && <p>Scryfall read this as {matched}.</p>}
-          <p className="oracle-text">{record.oracle_text}</p>
-          {record.rulings?.length > 0 ? (
-            <ul className="ruling-list">
-              {record.rulings.map((ruling, index) => (
-                <li key={`${ruling.published_at}-${index}`}>
-                  <time dateTime={ruling.published_at}>{ruling.published_at}</time>
-                  {ruling.comment}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No official ruling is in the local list.</p>
-          )}
-        </>
-      )}
-      {status === "ready" && !record && <p>The local list does not include this card.</p>}
-    </div>
+    <details className="oracle-disclosure">
+      <summary>Oracle text</summary>
+      <div className="oracle-body">
+        {status === "loading" && <p>Looking up this card.</p>}
+        {status === "down" && <p>The scan service is not running, so this card's text can't be loaded.</p>}
+        {status === "missing" && <p>Scryfall has no card by that name.</p>}
+        {status === "ready" && record && (
+          <>
+            {showMatch && <p>Scryfall read this as {matched}.</p>}
+            <p className="oracle-text">{record.oracle_text}</p>
+            {record.rulings?.length > 0 ? (
+              <ul className="ruling-list">
+                {record.rulings.map((ruling, index) => (
+                  <li key={`${ruling.published_at}-${index}`}>
+                    <time dateTime={ruling.published_at}>{ruling.published_at}</time>
+                    {ruling.comment}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No official ruling is in the local list.</p>
+            )}
+          </>
+        )}
+        {status === "ready" && !record && <p>The local list does not include this card.</p>}
+      </div>
+    </details>
   );
 }
 
@@ -214,20 +249,25 @@ export function ClarifyPanel({ session, seatNames, onSample, onUseTable, onToggl
       {!onTable && <p>Sample. The cards on the table stay as they are.</p>}
       {selected.length === 0 && <p>Select the cards in the argument.</p>}
       {!onTable &&
-        session.game_state.objects.map((object) => (
-          <button
-            key={object.id}
-            type="button"
-            className={selectedIds.has(object.id) ? "card-row on" : "card-row"}
-            aria-pressed={selectedIds.has(object.id)}
-            onClick={() => onToggleFocus(object.id)}
-          >
-            <span className="card-name">{object.name}</span>
-            <span className="card-meta">
-              {who(object.controller, seatNames)} · {ZONE_LABEL[object.zone]}
-            </span>
-          </button>
-        ))}
+        session.game_state.objects.map((object) => {
+          const picked = selectedIds.has(object.id);
+          return (
+            <div key={object.id} className="card-block">
+              <button
+                type="button"
+                className={picked ? "card-row on" : "card-row"}
+                aria-pressed={picked}
+                onClick={() => onToggleFocus(object.id)}
+              >
+                <span className="card-name">{object.name}</span>
+                <span className="card-meta">
+                  {who(object.controller, seatNames)} · {ZONE_LABEL[object.zone]}
+                </span>
+              </button>
+              {picked && <OracleDisclosure name={object.name} />}
+            </div>
+          );
+        })}
       <section className="board-section" aria-label="Clarifications">
         <h2>Clarifications</h2>
         {selected.length === 1 && <p className="board-limit">Select the cards in the argument.</p>}
@@ -332,15 +372,6 @@ export function ClarifyPanel({ session, seatNames, onSample, onUseTable, onToggl
           </ul>
         )}
       </section>
-      {selected.map((object) => (
-        <CardWriteup
-          key={object.id}
-          object={object}
-          seatNames={seatNames}
-          record={recordFor(object.name)}
-          status={statusFor(object.name)}
-        />
-      ))}
     </section>
   );
 }
