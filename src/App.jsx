@@ -285,7 +285,6 @@ export default function App() {
             error={scanError}
             onClose={closeBoard}
             onStaged={loadStaged}
-            onRotatePhoto={(direction) => sendBoard({ type: "rotate", direction, commanders })}
             send={sendBoard}
             clarifyOn={clarifyOn}
             session={session}

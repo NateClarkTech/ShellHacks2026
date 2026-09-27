@@ -769,11 +769,18 @@ button.field.partner-name {
 
 .board-bar > button { font-size: 13px; flex: none; }
 
-.board-tools { display: contents; }
-
-.board-bar > button:nth-last-child(2) { margin-left: auto; }
+.board-tools {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+}
 
 .board-tools button { flex: none; }
+
+.board-end { margin-left: auto; }
 
 .board-warn {
   margin: 0;

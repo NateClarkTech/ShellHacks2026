@@ -393,7 +393,6 @@ export function BoardView({
   error,
   onClose,
   onStaged,
-  onRotatePhoto,
   send,
   scan,
   clarifyOn = false,
@@ -519,11 +518,8 @@ export function BoardView({
           <button type="button" onClick={() => setFacing((current) => (current + 1) % 4)}>
             Face {playerName(BOTTOM_EDGE[facing], seatNames)}
           </button>
-          <button type="button" onClick={() => onRotatePhoto(1)}>
-            Bottom edge: {playerName(BOTTOM_EDGE[board.orientation], seatNames)}
-          </button>
         </div>
-        <button type="button" disabled={board.past.length === 0} onClick={() => send({ type: "undo" })}>
+        <button type="button" className="board-end" disabled={board.past.length === 0} onClick={() => send({ type: "undo" })}>
           Undo
         </button>
         <button type="button" onClick={onClose}>
