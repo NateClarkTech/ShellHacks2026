@@ -17,6 +17,12 @@ html, body, #root {
   -webkit-touch-callout: none;
 }
 
+#root {
+  display: flex;
+  justify-content: center;
+  height: 100dvh;
+}
+
 button, input {
   font: inherit;
   color: inherit;
@@ -48,13 +54,12 @@ input {
 }
 
 .table {
-  position: fixed;
-  inset: 0;
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-  width: 100vw;
+  width: min(100vw, 430px);
   height: 100dvh;
   padding:
     calc(8px + env(safe-area-inset-top))
@@ -64,6 +69,11 @@ input {
   background: radial-gradient(ellipse at center, #1c3b2e 0%, #0e1a14 72%);
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* A phone stays a portrait column. A desktop window is wide enough to use the full width. */
+@media (min-width: 800px) and (min-height: 600px) {
+  .table { width: 100%; }
 }
 
 .cell {
@@ -388,14 +398,62 @@ button.field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
-  min-height: 0;
+  flex: none;
 }
 
 .scan-note {
   margin: 0;
   font-size: 13px;
   line-height: 1.3;
+}
+
+.scan-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scan-meter-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #c6a15b 45%, #234536);
+  background: #10241c;
+}
+
+.scan-meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8c6a32, #e3c27a);
+}
+
+.scan-meter-track:not(.wait) .scan-meter-fill {
+  transition: width 0.1s linear;
+}
+
+.scan-meter-track.wait .scan-meter-fill {
+  width: 100%;
+  animation: scan-meter-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes scan-meter-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-meter-track.wait .scan-meter-fill {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.scan-meter-time {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #e3c27a;
 }
 
 .scan-actions {
@@ -434,7 +492,7 @@ button.field {
 }
 
 .scrim.board-scrim {
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: flex;
   padding:
@@ -672,13 +730,9 @@ button.field.partner-name {
 
 .board-bar button { font-size: 13px; flex: none; }
 
-.board-tools {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-}
+.board-tools { display: contents; }
+
+.board-bar > button:nth-last-child(2) { margin-left: auto; }
 
 .board-tools button { flex: none; }
 

@@ -176,6 +176,7 @@ export function reduceBoard(state, action) {
                 name,
                 detail,
                 note: PICK_NOTES.has(item.note) ? "" : item.note,
+                tapped: action.tapped == null ? Boolean(item.tapped) : Boolean(action.tapped),
                 identity: nameChanged || item.identity === "confirm" ? "chosen" : item.identity,
                 controller,
                 zone,

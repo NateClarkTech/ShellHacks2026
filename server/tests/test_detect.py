@@ -42,7 +42,7 @@ def test_four_cards_and_a_page_sized_rectangle():
 def test_a_quad_inside_another_card_is_dropped():
     image = _canvas(800, 900, seed=2)
     _paint_card(image, 120, 60, 400, 560)
-    _paint_card(image, 200, 140, 250, 360, fill=(30, 30, 30))
+    _paint_card(image, 200, 140, 250, 360, fill=(40, 90, 60))
     found = detect_cards(image)
     assert found["scene"] == "close"
     assert len(found["crops"]) == 1
@@ -72,6 +72,46 @@ def test_a_rotated_card_keeps_its_title_on_a_short_edge():
         bottom = float(gray[-int(height * 0.18) :].mean())
         middle = float(gray[int(height * 0.4) : int(height * 0.6)].mean())
         assert max(top, bottom) > middle + 8, angle
+
+
+def _paint_strip(image, x, y, width, height):
+    cv2.rectangle(image, (x, y), (x + width, y + height), (230, 230, 226), -1)
+    cv2.rectangle(image, (x, y), (x + width, y + height), (16, 16, 16), 2)
+    for offset in range(4):
+        top = y + 8 + offset * 10
+        cv2.rectangle(image, (x + 10, top), (x + width // 2, top + 6), (20, 20, 20), -1)
+    cv2.circle(image, (x + width - 18, y + height // 2), 8, (40, 40, 210), -1)
+
+
+def test_photo_up_wins_when_most_cards_are_sideways():
+    image = _canvas(1200, 980, seed=7)
+    for x, y in ((40, 60), (40, 300), (40, 540)):
+        _paint_card(image, x, y, 260, 180)
+    _paint_card(image, 720, 280, 180, 260)
+    found = detect_cards(image)
+    tapped = [crop for crop in found["crops"] if crop["tapped"]]
+    standing = [crop for crop in found["crops"] if not crop["tapped"] and not crop["stacked"]]
+    assert len(tapped) == 3
+    assert len(standing) == 1
+    stand = standing[0]["box"]
+    assert stand["cx"] > 0.5
+
+
+def test_a_sideways_card_is_tapped_and_a_title_strip_is_a_stack():
+    image = _canvas(1100, 900, seed=6)
+    for x, y in ((60, 80), (320, 80), (60, 460)):
+        _paint_card(image, x, y, 180, 250)
+    _paint_card(image, 560, 200, 250, 180)
+    _paint_strip(image, 860, 90, 180, 48)
+    _paint_strip(image, 860, 150, 180, 48)
+    found = detect_cards(image)
+    assert found["scene"] == "close"
+    tapped = [crop for crop in found["crops"] if crop["tapped"]]
+    stacked = [crop for crop in found["crops"] if crop["stacked"]]
+    assert len(tapped) == 1
+    assert all(not crop["stacked"] for crop in tapped)
+    assert len(stacked) >= 1
+    assert all(not crop["tapped"] for crop in stacked)
 
 
 def test_small_cards_are_a_wide_scene_with_no_crops():

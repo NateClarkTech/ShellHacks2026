@@ -2,6 +2,7 @@
   "name": "Commander table",
   "short_name": "Table",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0e1a14",
   "theme_color": "#0e1a14",
   "start_url": ".",
