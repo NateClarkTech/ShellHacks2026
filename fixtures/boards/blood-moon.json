@@ -37,9 +37,9 @@
   ],
   "objects": [
     {
-      "id": "obj-rip",
-      "oracle_id": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
-      "name": "Rest in Peace",
+      "id": "obj-blood-moon",
+      "oracle_id": "94fac5fe-97d5-4c12-a80c-8efff9d853ae",
+      "name": "Blood Moon",
       "zone": "battlefield",
       "controller": "seat1",
       "owner": null,
@@ -49,11 +49,23 @@
       "cv_confidence": null
     },
     {
-      "id": "obj-witness",
-      "oracle_id": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
-      "name": "Eternal Witness",
-      "zone": "graveyard",
+      "id": "obj-ashaya",
+      "oracle_id": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+      "name": "Ashaya, Soul of the Wild",
+      "zone": "battlefield",
       "controller": "seat2",
+      "owner": null,
+      "status": [],
+      "attachments": [],
+      "counters": {},
+      "cv_confidence": null
+    },
+    {
+      "id": "obj-angel",
+      "oracle_id": "28c7f2b6-ba67-4ccf-9e1b-99c89a9d1f72",
+      "name": "Angel of Invention",
+      "zone": "battlefield",
+      "controller": "seat3",
       "owner": null,
       "status": [],
       "attachments": [],

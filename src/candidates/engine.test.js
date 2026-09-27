@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import bloodMoonUrborg from "../../fixtures/boards/blood-moon-urborg.json" with { type: "json" };
+import humility from "../../fixtures/boards/humility-anthem.json" with { type: "json" };
 import { lookupName } from "../cards/index.js";
 import { parseGameState } from "../schema/gs.v1.js";
-import { sampleById } from "../session/fixtures.js";
 import { clarify } from "./engine.js";
 import { choicesFor, resolveChoice, resolveTemplate } from "../resolver/template.js";
 
@@ -56,7 +57,7 @@ function catalogLookup(extra = {}) {
 }
 
 test("Blood Moon and Urborg raise a layer question", () => {
-  const state = parseGameState(sampleById("blood-moon-urborg").state);
+  const state = parseGameState(bloodMoonUrborg);
   const lookup = catalogLookup({
     "Blood Moon": { tags: [{ id: "moon-tag", slug: "blood-moon-effect", family: "layer_type" }] },
   });
@@ -72,7 +73,7 @@ test("Blood Moon and Urborg raise a layer question", () => {
 });
 
 test("Humility and Glorious Anthem raise a layer question", () => {
-  const state = parseGameState(sampleById("humility-anthem").state);
+  const state = parseGameState(humility);
   const lookup = catalogLookup();
   const { candidates } = clarify(state, focusOn("obj-humility", "obj-anthem"), lookup);
   const layer = candidates.find((candidate) => candidate.shape === "layer_type");
