@@ -145,8 +145,13 @@ input {
     "who pad"
     "tools tools";
   align-items: center;
-  gap: 8px 12px;
-  padding: 16px 18px 12px;
+  /* 182px is the seat box on a 390px-wide phone. Clamps hold that size and
+     shrink on a shorter landscape seat so the life total stays on screen. */
+  gap: clamp(4px, 4.4cqh, 8px) clamp(8px, 6.6cqh, 12px);
+  padding:
+    clamp(8px, 8.8cqh, 16px)
+    clamp(10px, 9.9cqh, 18px)
+    clamp(6px, 6.6cqh, 12px);
   min-width: 0;
   min-height: 0;
 }
@@ -156,9 +161,10 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
+  gap: clamp(2px, 2.2cqh, 4px);
   min-width: 0;
   padding-inline: 4px;
+  overflow: hidden;
 }
 
 button.field {
@@ -172,11 +178,17 @@ button.field {
   white-space: normal;
   overflow: visible;
   overflow-wrap: anywhere;
-  line-height: 1.25;
+  line-height: 1.15;
+}
+
+.who button.field {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .seat-name {
-  font-size: 18px;
+  font-size: clamp(14px, 9.9cqh, 18px);
   font-weight: 650;
 }
 
@@ -190,7 +202,7 @@ button.field {
 }
 
 .commander, button.field.commander, button.field.partner-name {
-  font-size: 15px;
+  font-size: clamp(12px, 8.24cqh, 15px);
   color: color-mix(in srgb, var(--accent) 78%, white);
 }
 
@@ -207,7 +219,7 @@ button.field {
 .life-num, button.life-num, input.life-num {
   font-family: Didot, "Iowan Old Style", Palatino, Georgia, serif;
   font-variant-numeric: tabular-nums;
-  font-size: 58px;
+  font-size: clamp(28px, 31.9cqh, 58px);
   line-height: 0.85;
   text-align: right;
   color: #f6f1e6;
@@ -229,9 +241,9 @@ button.field {
 }
 
 .life-pad .stepper {
-  min-width: 64px;
-  min-height: 46px;
-  font-size: 18px;
+  min-width: clamp(44px, 35.2cqh, 64px);
+  min-height: clamp(30px, 25.3cqh, 46px);
+  font-size: clamp(15px, 9.9cqh, 18px);
   font-weight: 700;
 }
 
@@ -264,7 +276,10 @@ button.field {
 }
 
 .tools button {
-  font-size: 13px;
+  min-width: 0;
+  min-height: clamp(30px, 22cqh, 40px);
+  padding-inline: 6px;
+  font-size: clamp(11px, 7.14cqh, 13px);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -385,7 +400,7 @@ button.field {
 .choose-title, .choose-sub { margin: 0; }
 .choose-title {
   font-family: Didot, "Iowan Old Style", Palatino, Georgia, serif;
-  font-size: 42px;
+  font-size: clamp(28px, 23.1cqh, 42px);
   color: #f6f1e6;
 }
 .choose-sub {
@@ -489,6 +504,11 @@ button.field {
   z-index: 6;
   pointer-events: auto;
   background: rgb(8 14 11 / 45%);
+  padding:
+    calc(8px + env(safe-area-inset-top))
+    calc(8px + env(safe-area-inset-right))
+    calc(8px + env(safe-area-inset-bottom))
+    calc(8px + env(safe-area-inset-left));
 }
 
 .scrim.board-scrim {
@@ -504,7 +524,7 @@ button.field {
 }
 
 .confirm {
-  width: min(260px, 70vh);
+  width: min(260px, 70vh, 86vw);
   padding: 16px;
   border-radius: 18px;
   background: #173026;
@@ -514,8 +534,11 @@ button.field {
   gap: 12px;
 }
 
-.confirm.left { transform: rotate(90deg); }
-.confirm.right { transform: rotate(-90deg); }
+.confirm[data-seat="seat1"],
+.confirm[data-seat="seat4"] { transform: rotate(90deg); }
+
+.confirm[data-seat="seat2"],
+.confirm[data-seat="seat3"] { transform: rotate(-90deg); }
 
 .confirm p {
   margin: 0;
@@ -624,6 +647,7 @@ button.field.partner-name {
   right: 0;
   top: 0;
   padding: calc(10px + env(safe-area-inset-top)) 12px 0;
+  overflow: auto;
   pointer-events: none;
 }
 
@@ -665,6 +689,13 @@ button.field.partner-name {
 
 .type-actions button { min-height: 46px; }
 
+@media (max-height: 500px) {
+  .type-scrim { padding-top: calc(6px + env(safe-area-inset-top)); }
+  .type-card { gap: 6px; padding: 10px; }
+  .type-card input { min-height: 44px; font-size: 32px; }
+  .type-actions button { min-height: 40px; }
+}
+
 .file-clip {
   position: absolute;
   width: 1px;
@@ -677,10 +708,14 @@ button.field.partner-name {
   border: 0;
 }
 
+.table:has(.sheet) .board-launch {
+  visibility: hidden;
+}
+
 .board-launch {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: calc(50% + (env(safe-area-inset-left) - env(safe-area-inset-right)) / 2);
+  top: calc(50% + (env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 2);
   z-index: 5;
   width: 72px;
   height: 72px;
@@ -961,4 +996,53 @@ button.field.partner-name {
   display: block;
   color: #c6a15b;
   font-size: 12px;
+}
+
+/* Players sit along the long edges. Portrait faces left and right.
+   Landscape faces the top and bottom and keeps each seat wide. */
+@media (orientation: landscape) {
+  .table { width: 100%; }
+
+  .cell[data-seat] .rotator {
+    inset: 0;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+
+  .cell[data-seat="seat1"] .rotator,
+  .cell[data-seat="seat2"] .rotator {
+    transform: rotate(180deg);
+  }
+
+  .cell[data-seat="seat1"]::after,
+  .cell[data-seat="seat2"]::after {
+    top: 0;
+    right: 18px;
+    bottom: auto;
+    left: 18px;
+    width: auto;
+    height: 4px;
+  }
+
+  .cell[data-seat="seat4"]::after,
+  .cell[data-seat="seat3"]::after {
+    top: auto;
+    right: 18px;
+    bottom: 0;
+    left: 18px;
+    width: auto;
+    height: 4px;
+  }
+
+  .confirm[data-seat="seat1"],
+  .confirm[data-seat="seat2"] { transform: rotate(180deg); }
+
+  .confirm[data-seat="seat4"],
+  .confirm[data-seat="seat3"] { transform: none; }
+
+  /* A short landscape seat puts the life total under the center button. */
+  @container seat (max-height: 170px) {
+    .panel { padding-right: 40px; }
+  }
 }

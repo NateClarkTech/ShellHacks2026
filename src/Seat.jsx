@@ -24,7 +24,9 @@ function Field({
     input?.focus();
     const fit = () => {
       if (!input || !input.clientWidth) return;
-      let size = inputMode === "numeric" ? 72 : 64;
+      const viewport = window.visualViewport;
+      const short = (viewport?.height ?? window.innerHeight) < 500;
+      let size = inputMode === "numeric" ? (short ? 40 : 72) : short ? 32 : 64;
       input.style.fontSize = `${size}px`;
       while (size > 20 && input.scrollWidth > input.clientWidth + 1) {
         size -= 1;
@@ -34,7 +36,10 @@ function Field({
     const pin = () => {
       const viewport = window.visualViewport;
       const shell = barRef.current;
-      if (shell && viewport) shell.style.top = `${viewport.offsetTop}px`;
+      if (shell && viewport) {
+        shell.style.top = `${viewport.offsetTop}px`;
+        shell.style.maxHeight = `${viewport.height}px`;
+      }
       fit();
     };
     pin();

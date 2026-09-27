@@ -10,7 +10,6 @@ import { selectToggle, sessionFromFixture, sessionFromTable } from "./session/se
 import { assembleScan, duplicateShare } from "./vision.js";
 
 const ORDER = ["seat1", "seat2", "seat4", "seat3"];
-const FACES_LEFT = new Set(["seat1", "seat4"]);
 
 function scanMessage(error) {
   if (error?.message === "Failed to fetch") {
@@ -333,7 +332,8 @@ export default function App() {
       {resetAsk && (
         <div className="scrim">
           <div
-            className={`confirm ${FACES_LEFT.has(resetAsk) ? "left" : "right"}`}
+            className="confirm"
+            data-seat={resetAsk}
             role="dialog"
             aria-label="Reset the game"
           >
